@@ -1,0 +1,101 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role and approval status",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["profesor", "alumno"] },
+        "status": { "type": "string", "enum": ["pending", "approved"] },
+        "displayName": { "type": "string" },
+        "uid": { "type": "string" }
+      },
+      "required": ["email", "role", "status", "uid"]
+    },
+    "ClassModule": {
+      "title": "ClassModule",
+      "description": "Educational module content",
+      "type": "object",
+      "properties": {
+        "id": { "type": "number" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "visible": { "type": "boolean" },
+        "notebookLMUrl": { "type": "string" },
+        "materials": { "type": "array", "items": { "$ref": "Material" } },
+        "extra": { "type": "array", "items": { "$ref": "Material" } },
+        "task": { "$ref": "Task" }
+      },
+      "required": ["title", "visible"]
+    },
+    "Material": {
+      "title": "Material",
+      "description": "Class material (PDF, Video, Link)",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["pdf", "video", "link"] },
+        "title": { "type": "string" },
+        "url": { "type": "string" }
+      }
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Assignment for a module",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "deadline": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "ForumPost": {
+      "title": "ForumPost",
+      "description": "Post in the forum",
+      "type": "object",
+      "properties": {
+        "user": { "type": "string" },
+        "text": { "type": "string" },
+        "date": { "type": "string" },
+        "uid": { "type": "string" }
+      },
+      "required": ["user", "text", "date", "uid"]
+    },
+    "Submission": {
+      "title": "Submission",
+      "description": "Student task submission",
+      "type": "object",
+      "properties": {
+        "studentName": { "type": "string" },
+        "studentUid": { "type": "string" },
+        "taskId": { "type": "number" },
+        "fileName": { "type": "string" },
+        "date": { "type": "string" },
+        "status": { "type": "string", "enum": ["Recibido", "Calificado"] }
+      },
+      "required": ["studentUid", "taskId", "fileName", "date", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/modules/{moduleId}": {
+      "schema": "ClassModule",
+      "description": "Course modules"
+    },
+    "/forum/{postId}": {
+      "schema": "ForumPost",
+      "description": "Forum main posts"
+    },
+    "/forum/{postId}/replies/{replyId}": {
+      "schema": "ForumPost",
+      "description": "Replies to forum posts"
+    },
+    "/submissions/{submissionId}": {
+      "schema": "Submission",
+      "description": "Task submissions"
+    }
+  }
+}
