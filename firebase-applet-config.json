@@ -1,10 +1,10 @@
 {
-  "projectId": "gen-lang-client-0489950139",
-  "appId": "1:1077887573535:web:6e43c830a46e5a1049bf2a",
-  "apiKey": "AIzaSyBPFqvo_R3KLQ_yF55GOSkFmyMpHGKuwwY",
-  "authDomain": "gen-lang-client-0489950139.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-aab8bd6a-0c96-41e1-bd6c-297929d01da6",
-  "storageBucket": "gen-lang-client-0489950139.firebasestorage.app",
-  "messagingSenderId": "1077887573535",
+  "projectId": "curso-ia-81370",
+  "appId": "1:561076702399:web:42d29675759771f5164a0a",
+  "apiKey": "AIzaSyCk4UTECEyMxMI0aXPSMj0bIwpft6a8jmA",
+  "authDomain": "curso-ia-81370.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "curso-ia-81370.firebasestorage.app",
+  "messagingSenderId": "561076702399",
   "measurementId": ""
 }
