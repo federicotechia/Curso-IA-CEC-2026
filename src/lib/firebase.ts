@@ -38,6 +38,12 @@ export const auth = getAuth(app);
 export const storage = getStorage(app, firebaseConfig.storageBucket);
 export const googleProvider = new GoogleAuthProvider();
 
+// Debug info for production environments
+if (typeof window !== 'undefined') {
+  console.log('Firebase Initialized with Project ID:', firebaseConfig.projectId);
+  console.log('Using Firestore Database ID:', firestoreDatabaseId);
+}
+
 export enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',

@@ -114,7 +114,15 @@ function AppContent() {
         try {
           const userDoc = await getDoc(userDocRef);
           if (userDoc.exists()) {
-            setProfile(userDoc.data() as UserProfile);
+            const data = userDoc.data() as UserProfile;
+            // Force admin status for the owner even if already exists
+            if (firebaseUser.email === 'federicotechia@gmail.com' && (data.role !== 'administrador' || data.status !== 'approved')) {
+              const updatedProfile = { ...data, role: 'administrador' as const, status: 'approved' as const };
+              await setDoc(userDocRef, updatedProfile, { merge: true });
+              setProfile(updatedProfile);
+            } else {
+              setProfile(data);
+            }
           } else {
             // Pre-registration logic
             const isAdminEmail = ["federicotechia@gmail.com", "fede.trillini@gmail.com"].includes(firebaseUser.email || '');
