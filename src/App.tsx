@@ -39,7 +39,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import { ClassModule, ForumPost, Submission, UserProfile, UserRole, Task } from './types';
-import { auth, db, storage, googleProvider, handleFirestoreError, OperationType } from './lib/firebase';
+import { auth, db, storage, googleProvider, handleFirestoreError, OperationType, firestoreDatabaseId } from './lib/firebase';
 import { signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { 
   collection, 
@@ -792,6 +792,15 @@ function AppContent() {
           >
             <LogOut size={16} /> Cerrar Sesión
           </button>
+
+          {/* Debug Info for Admin */}
+          {profile?.role === 'administrador' && (
+            <div className="mt-4 p-2 bg-slate-900/50 rounded-lg border border-slate-800">
+              <p className="text-[8px] uppercase font-black text-slate-500 tracking-widest mb-1">Firebase Debug</p>
+              <p className="text-[9px] text-slate-400 font-mono truncate" title={auth.app.options.projectId}>Proj: {auth.app.options.projectId}</p>
+              <p className="text-[9px] text-slate-400 font-mono truncate" title={firestoreDatabaseId}>DB: {firestoreDatabaseId || '(default)'}</p>
+            </div>
+          )}
         </div>
       </aside>
 

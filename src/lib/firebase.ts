@@ -31,6 +31,8 @@ const firestoreDatabaseId = (import.meta.env.VITE_FIREBASE_DATABASE_ID && import
   ? import.meta.env.VITE_FIREBASE_DATABASE_ID
   : (localConfig as any).firestoreDatabaseId;
 
+export { firestoreDatabaseId };
+
 // Initialize Firebase SDK
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firestoreDatabaseId);
