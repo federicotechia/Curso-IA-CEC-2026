@@ -241,11 +241,16 @@ function AppContent() {
         attachmentUrl: newTaskAttachmentUrl
       };
       await setDoc(doc(db, 'tasks', newTaskId), newTask);
+      const formattedDate = new Date(newTask.deadline).toLocaleDateString(undefined, { timeZone: 'UTC' });
       setShowNewTaskModal(false);
       setNewTaskTitle('');
       setNewTaskDescription('');
       setNewTaskDeadline('');
       setNewTaskAttachmentUrl('');
+      setNotification({ 
+        message: `Tarea "${newTask.title}" creada con éxito. Límite: ${formattedDate}`, 
+        type: 'success' 
+      });
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'tasks');
     }
@@ -272,9 +277,13 @@ function AppContent() {
     if (!editingTask || !editTaskData) return;
     try {
       await updateDoc(doc(db, 'tasks', editingTask), editTaskData);
+      const formattedDate = new Date(editTaskData.deadline).toLocaleDateString(undefined, { timeZone: 'UTC' });
       setEditingTask(null);
       setEditTaskData(null);
-      setNotification({ message: "Tarea actualizada", type: 'success' });
+      setNotification({ 
+        message: `Tarea "${editTaskData.title}" actualizada con éxito. Nuevo límite: ${formattedDate}`, 
+        type: 'success' 
+      });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `tasks/${editingTask}`);
     }
@@ -1333,8 +1342,8 @@ function AppContent() {
                   <div className="grid gap-4">
                     {tasks.map((task, idx) => (
                       <div key={task.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-blue-200 transition-colors">
-                        <div className="flex items-center gap-4">
-                          <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="flex flex-col gap-1 shrink-0">
                             <button 
                               disabled={idx === 0}
                               onClick={() => handleMoveTask(task.id, 'up')}
@@ -1350,9 +1359,9 @@ function AppContent() {
                               <ArrowDown size={14} />
                             </button>
                           </div>
-                          <div>
-                            <h4 className="font-bold text-slate-700">{task.title}</h4>
-                            <p className="text-xs text-slate-400">Límite: {new Date(task.deadline).toLocaleDateString()}</p>
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-slate-700 truncate">{task.title}</h4>
+                            <p className="text-xs text-slate-400">Límite: {new Date(task.deadline).toLocaleDateString(undefined, { timeZone: 'UTC' })}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -1485,19 +1494,19 @@ function AppContent() {
                     >
                       <div className="p-8">
                         <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
-                          <div className="flex-1">
+                          <div className="flex-1 min-w-0 w-full">
                             <div className="flex items-center gap-3 mb-4">
-                              <span className="bg-blue-50 text-blue-600 p-2.5 rounded-2xl">
+                              <span className="bg-blue-50 text-blue-600 p-2.5 rounded-2xl shrink-0">
                                 <FileText size={24} />
                               </span>
-                              <h3 className="text-2xl font-black text-slate-800 tracking-tight group-hover:text-blue-600 transition-colors">{task.title}</h3>
+                              <h3 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight group-hover:text-blue-600 transition-colors truncate">{task.title}</h3>
                             </div>
-                            <div className="prose prose-slate prose-sm max-w-none text-slate-600 leading-relaxed bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+                            <div className="prose prose-slate prose-sm max-w-none text-slate-600 leading-relaxed bg-slate-50/50 p-4 md:p-6 rounded-2xl border border-slate-100">
                               <Markdown>{task.description}</Markdown>
                             </div>
                             {task.attachmentUrl && (
-                              <div className="mt-4 flex items-center gap-3 bg-blue-50/30 p-4 rounded-2xl border border-blue-100/50">
-                                <div className="bg-blue-100 p-2 rounded-xl text-blue-600">
+                              <div className="mt-4 flex items-center gap-3 bg-blue-50/30 p-4 rounded-2xl border border-blue-100/50 overflow-hidden">
+                                <div className="bg-blue-100 p-2 rounded-xl text-blue-600 shrink-0">
                                   <LinkIcon size={18} />
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -1515,7 +1524,7 @@ function AppContent() {
                                   href={task.attachmentUrl} 
                                   target="_blank" 
                                   rel="noreferrer"
-                                  className="p-2 bg-white text-blue-600 rounded-xl border border-blue-100 shadow-sm hover:bg-blue-50 transition-all"
+                                  className="p-2 bg-white text-blue-600 rounded-xl border border-blue-100 shadow-sm hover:bg-blue-50 transition-all shrink-0"
                                 >
                                   <ExternalLink size={16} />
                                 </a>
@@ -1523,25 +1532,25 @@ function AppContent() {
                             )}
                           </div>
                           
-                          <div className="flex flex-col items-end gap-3 min-w-[160px]">
+                          <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-3 w-full md:w-auto md:min-w-[160px] pt-4 md:pt-0 border-t md:border-t-0 border-slate-100">
                             {submission ? (
-                              <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-black text-[10px] uppercase tracking-wider ${
+                              <div className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-2xl font-black text-[10px] uppercase tracking-wider shrink-0 ${
                                 submission.status === 'Calificado' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
                               }`}>
                                 {submission.status === 'Calificado' ? (
-                                  <><CheckCircle size={14} /> Aprobada</>
+                                  <><CheckCircle size={14} /> Aprobado</>
                                 ) : (
                                   <><Clock size={14} /> Entregada</>
                                 )}
                               </div>
                             ) : (
-                              <div className="flex items-center gap-2 px-4 py-2 rounded-2xl font-black text-[10px] uppercase tracking-wider bg-slate-100 text-slate-500">
+                              <div className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-2xl font-black text-[10px] uppercase tracking-wider bg-slate-100 text-slate-500 shrink-0">
                                 <AlertCircle size={14} /> Pendiente
                               </div>
                             )}
                             
-                            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
-                              <Clock size={14} /> Límite: {new Date(task.deadline).toLocaleDateString()}
+                            <div className="flex items-center gap-2 text-[10px] md:text-xs font-bold text-slate-400 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 shrink-0">
+                              <Clock size={14} /> Límite: {new Date(task.deadline).toLocaleDateString(undefined, { timeZone: 'UTC' })}
                             </div>
                           </div>
                         </div>
@@ -1639,13 +1648,13 @@ function AppContent() {
 
         {activeTab === 'admin' && (profile.role === 'profesor' || profile.role === 'administrador') && (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-4 bg-slate-50 border-b border-slate-200">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+              <div className="p-4 bg-slate-50 border-b border-slate-200 min-w-full">
                 <h3 className="font-bold text-slate-700 flex items-center gap-2">
                   <UserPlus size={18} /> Gestión de Usuarios y Roles
                 </h3>
               </div>
-              <table className="w-full text-left">
+              <table className="w-full text-left min-w-[600px]">
                 <thead className="bg-slate-50 border-bottom border-slate-200">
                   <tr>
                     <th className="p-4 text-xs font-bold uppercase text-slate-400">Nombre</th>

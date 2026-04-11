@@ -2,11 +2,38 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, query, where, onSnapshot, addDoc, orderBy, getDocFromServer, FirestoreError } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import firebaseConfig from '../../firebase-applet-config.json';
+import localConfig from '../../firebase-applet-config.json';
+
+// Use local config as base, override with env if available and non-empty
+const firebaseConfig = {
+  ...localConfig,
+  apiKey: (import.meta.env.VITE_FIREBASE_API_KEY && import.meta.env.VITE_FIREBASE_API_KEY.length > 0) 
+    ? import.meta.env.VITE_FIREBASE_API_KEY 
+    : localConfig.apiKey,
+  authDomain: (import.meta.env.VITE_FIREBASE_AUTH_DOMAIN && import.meta.env.VITE_FIREBASE_AUTH_DOMAIN.length > 0)
+    ? import.meta.env.VITE_FIREBASE_AUTH_DOMAIN
+    : localConfig.authDomain,
+  projectId: (import.meta.env.VITE_FIREBASE_PROJECT_ID && import.meta.env.VITE_FIREBASE_PROJECT_ID.length > 0)
+    ? import.meta.env.VITE_FIREBASE_PROJECT_ID
+    : localConfig.projectId,
+  storageBucket: (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET && import.meta.env.VITE_FIREBASE_STORAGE_BUCKET.length > 0)
+    ? import.meta.env.VITE_FIREBASE_STORAGE_BUCKET
+    : localConfig.storageBucket,
+  messagingSenderId: (import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID && import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID.length > 0)
+    ? import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID
+    : localConfig.messagingSenderId,
+  appId: (import.meta.env.VITE_FIREBASE_APP_ID && import.meta.env.VITE_FIREBASE_APP_ID.length > 0)
+    ? import.meta.env.VITE_FIREBASE_APP_ID
+    : localConfig.appId,
+};
+
+const firestoreDatabaseId = (import.meta.env.VITE_FIREBASE_DATABASE_ID && import.meta.env.VITE_FIREBASE_DATABASE_ID.length > 0)
+  ? import.meta.env.VITE_FIREBASE_DATABASE_ID
+  : (localConfig as any).firestoreDatabaseId;
 
 // Initialize Firebase SDK
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = getFirestore(app, firestoreDatabaseId);
 export const auth = getAuth(app);
 export const storage = getStorage(app, firebaseConfig.storageBucket);
 export const googleProvider = new GoogleAuthProvider();

@@ -1,20 +1,42 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Curso IA 2026 - CEC
 
-# Run and deploy your AI Studio app
+Plataforma educativa para la gestión de clases, tareas y consultas sobre Inteligencia Artificial.
 
-This contains everything you need to run your app locally.
+## 🚀 Despliegue en Vercel
 
-View your app in AI Studio: https://ai.studio/apps/aab8bd6a-0c96-41e1-bd6c-297929d01da6
+Para desplegar esta aplicación en Vercel, sigue estos pasos:
 
-## Run Locally
+### 1. Configurar Variables de Entorno
+En el panel de control de tu proyecto en Vercel, añade las siguientes variables de entorno (puedes encontrarlas en tu consola de Firebase):
 
-**Prerequisites:**  Node.js
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_APP_ID`
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_DATABASE_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
 
+### 2. Autorizar Dominio en Firebase
+Para que la autenticación de Google funcione, debes añadir el dominio de tu app de Vercel en la consola de Firebase:
+1. Ve a **Authentication** > **Settings** > **Authorized Domains**.
+2. Añade tu dominio de Vercel (ej: `mi-curso-ia.vercel.app`).
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## 🛠️ Desarrollo Local
+
+1. Instala las dependencias:
+   ```bash
+   npm install
+   ```
+
+2. Inicia el servidor de desarrollo:
+   ```bash
+   npm run dev
+   ```
+
+## 📦 Estructura del Proyecto
+
+- `src/`: Código fuente de la aplicación React.
+- `server.ts`: Servidor Express para manejar la app en producción.
+- `firestore.rules`: Reglas de seguridad para la base de datos.
+- `firebase-blueprint.json`: Estructura de datos de la aplicación.
