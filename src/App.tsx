@@ -664,33 +664,34 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
-        <Loader2 className="text-blue-500 animate-spin" size={48} />
+      <div className="min-h-screen flex items-center justify-center bg-brand-dark">
+        <Loader2 className="text-brand-red animate-spin" size={48} />
       </div>
     );
   }
 
   if (!user || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-brand-dark p-4">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md"
+          className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md border-t-8 border-brand-red"
         >
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-slate-800">Curso IA 2026 - CEC</h1>
-            <p className="text-slate-500 mt-2">Plataforma de Gestión de Aprendizaje</p>
+            <div className="w-16 h-16 bg-brand-red rounded-2xl flex items-center justify-center font-bold text-2xl text-white mx-auto mb-4 shadow-lg shadow-brand-red/20">IA</div>
+            <h1 className="text-3xl font-extrabold text-brand-dark tracking-tight">Curso IA 2026</h1>
+            <p className="text-slate-500 mt-2 font-medium">CEC - Plataforma Educativa</p>
           </div>
           <div className="space-y-4">
             <button 
               onClick={handleLogin}
-              className="w-full p-4 bg-slate-800 text-white rounded-xl font-semibold hover:bg-slate-700 transition-colors flex items-center justify-center gap-3"
+              className="w-full p-4 bg-brand-red text-white rounded-xl font-bold hover:bg-brand-red/90 transition-all shadow-lg shadow-brand-red/20 flex items-center justify-center gap-3 active:scale-95"
             >
               <Users size={20} /> Acceder con Google
             </button>
-            <p className="text-center text-xs text-slate-400 px-4">
-              Si eres alumno, tu registro quedará pendiente de aprobación por un profesor.
+            <p className="text-center text-[10px] text-slate-400 px-4 uppercase tracking-widest font-bold">
+              Acceso exclusivo para alumnos y profesores
             </p>
           </div>
         </motion.div>
@@ -700,16 +701,16 @@ function AppContent() {
 
   if (profile.status === 'pending') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
-          <Clock className="mx-auto text-amber-500 mb-4" size={48} />
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Registro Pendiente</h2>
-          <p className="text-slate-600 mb-6">
-            Hola <strong>{profile.displayName}</strong>, tu solicitud ha sido enviada. Un profesor debe aprobar tu acceso antes de que puedas ver el contenido.
+      <div className="min-h-screen flex items-center justify-center bg-brand-dark p-4">
+        <div className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md text-center border-t-8 border-amber-500">
+          <Clock className="mx-auto text-amber-500 mb-6" size={56} />
+          <h2 className="text-2xl font-extrabold text-brand-dark mb-3">Registro Pendiente</h2>
+          <p className="text-slate-600 mb-8 leading-relaxed">
+            Hola <strong className="text-brand-dark">{profile.displayName}</strong>, tu solicitud ha sido enviada. Un profesor debe aprobar tu acceso antes de que puedas ver el contenido.
           </p>
           <button 
             onClick={handleLogout}
-            className="text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-2 mx-auto"
+            className="text-slate-400 hover:text-brand-red transition-colors flex items-center gap-2 mx-auto font-bold text-sm uppercase tracking-wider"
           >
             <LogOut size={16} /> Cerrar Sesión
           </button>
@@ -738,45 +739,45 @@ function AppContent() {
       </AnimatePresence>
 
       {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-slate-900 text-white p-6 flex flex-col">
+      <aside className="w-full md:w-64 bg-brand-dark text-white p-6 flex flex-col shadow-2xl z-20">
         <div className="flex items-center gap-3 mb-10">
-          <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center font-bold text-lg shrink-0">IA</div>
+          <div className="w-10 h-10 bg-brand-red rounded-lg flex items-center justify-center font-bold text-lg shrink-0 shadow-lg shadow-brand-red/20">IA</div>
           <div className="flex flex-col">
             <span className="font-bold text-sm tracking-tight leading-none">Curso IA 2026</span>
-            <span className="text-[10px] font-black text-blue-400 tracking-widest">CEC</span>
+            <span className="text-[10px] font-black text-brand-red tracking-widest">CEC</span>
           </div>
         </div>
         
         <nav className="flex-1 space-y-2">
           <button 
             onClick={() => setActiveTab('clases')}
-            className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${activeTab === 'clases' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
+            className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${activeTab === 'clases' ? 'bg-brand-red text-white shadow-lg shadow-brand-red/20' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
           >
             <BookOpen size={18} /> Clases
           </button>
           <button 
             onClick={() => setActiveTab('foro')}
-            className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${activeTab === 'foro' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
+            className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${activeTab === 'foro' ? 'bg-brand-red text-white shadow-lg shadow-brand-red/20' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
           >
             <MessageSquare size={18} /> Foro
           </button>
           <button 
             onClick={() => setActiveTab('tareas')}
-            className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${activeTab === 'tareas' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
+            className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${activeTab === 'tareas' ? 'bg-brand-red text-white shadow-lg shadow-brand-red/20' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
           >
             <FileText size={18} /> Tareas
           </button>
           {(profile.role === 'profesor' || profile.role === 'administrador') && (
             <button 
               onClick={() => setActiveTab('admin')}
-              className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${activeTab === 'admin' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
+              className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${activeTab === 'admin' ? 'bg-brand-red text-white shadow-lg shadow-brand-red/20' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
             >
               <ShieldCheck size={18} /> Usuarios
             </button>
           )}
         </nav>
 
-        <div className="mt-auto pt-6 border-t border-slate-800">
+        <div className="mt-auto pt-6 border-t border-white/5">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs uppercase">
               {profile.displayName[0]}
@@ -792,28 +793,19 @@ function AppContent() {
           >
             <LogOut size={16} /> Cerrar Sesión
           </button>
-
-          {/* Debug Info for Admin */}
-          {profile?.role === 'administrador' && (
-            <div className="mt-4 p-2 bg-slate-900/50 rounded-lg border border-slate-800">
-              <p className="text-[8px] uppercase font-black text-slate-500 tracking-widest mb-1">Firebase Debug</p>
-              <p className="text-[9px] text-slate-400 font-mono truncate" title={auth.app.options.projectId}>Proj: {auth.app.options.projectId}</p>
-              <p className="text-[9px] text-slate-400 font-mono truncate" title={firestoreDatabaseId}>DB: {firestoreDatabaseId || '(default)'}</p>
-            </div>
-          )}
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-4 md:p-10 overflow-y-auto">
+      <main className="flex-1 p-4 md:p-10 overflow-y-auto bg-brand-gray/30">
         <header className="mb-8 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-slate-800 capitalize">
+          <h2 className="text-3xl font-extrabold text-brand-dark tracking-tight">
             {activeTab === 'clases' ? 'Módulos del Curso' : activeTab === 'foro' ? 'Foro de Consultas' : activeTab === 'tareas' ? 'Gestión de Tareas' : 'Administración de Usuarios'}
           </h2>
           {(profile.role === 'profesor' || profile.role === 'administrador') && (activeTab === 'clases' || activeTab === 'tareas') && (
             <button 
               onClick={() => activeTab === 'clases' ? setShowNewModuleModal(true) : setShowNewTaskModal(true)}
-              className="bg-slate-900 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-slate-800 transition-colors text-sm font-bold"
+              className="bg-brand-red text-white px-6 py-2.5 rounded-lg flex items-center gap-2 hover:bg-brand-red/90 transition-all shadow-lg shadow-brand-red/20 text-sm font-bold active:scale-95"
             >
               <Plus size={16} /> {activeTab === 'clases' ? 'Nueva Clase' : 'Nueva Tarea'}
             </button>
@@ -859,7 +851,7 @@ function AppContent() {
                     </button>
                     <button 
                       onClick={handleCreateModule}
-                      className="flex-1 p-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+                      className="flex-1 p-3 bg-brand-red text-white rounded-xl font-bold hover:bg-brand-red/90 transition-all active:scale-95"
                     >
                       Crear Clase
                     </button>
@@ -921,7 +913,7 @@ function AppContent() {
                       </button>
                       <button 
                         onClick={() => handleToggleVisibility(mod.id, mod.visible)}
-                        className={`p-5 border-l border-slate-100 hover:bg-slate-50 transition-colors ${mod.visible ? 'text-blue-500' : 'text-slate-400'}`}
+                        className={`p-5 border-l border-slate-100 hover:bg-slate-50 transition-colors ${mod.visible ? 'text-brand-red' : 'text-slate-400'}`}
                         title={mod.visible ? "Ocultar clase" : "Mostrar clase"}
                       >
                         {mod.visible ? <Eye size={20} /> : <EyeOff size={20} />}
@@ -977,7 +969,7 @@ function AppContent() {
                               <div>
                                 <div className="flex justify-between items-center mb-4">
                                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Material de Clase</h4>
-                                  <button onClick={() => addMaterial('materials')} className="text-blue-600 hover:text-blue-700 p-1"><Plus size={16} /></button>
+                                  <button onClick={() => addMaterial('materials')} className="text-brand-red hover:text-brand-red/80 p-1"><Plus size={16} /></button>
                                 </div>
                                 <div className="space-y-3">
                                   {editModuleData.materials?.map((mat: any, idx: number) => (
@@ -1045,7 +1037,7 @@ function AppContent() {
                               <div>
                                 <div className="flex justify-between items-center mb-4">
                                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Material Extra</h4>
-                                  <button onClick={() => addMaterial('extra')} className="text-blue-600 hover:text-blue-700 p-1"><Plus size={16} /></button>
+                                  <button onClick={() => addMaterial('extra')} className="text-brand-red hover:text-brand-red/80 p-1"><Plus size={16} /></button>
                                 </div>
                                 <div className="space-y-3">
                                   {editModuleData.extra?.map((mat: any, idx: number) => (
@@ -1322,14 +1314,14 @@ function AppContent() {
                   placeholder="Buscar tarea por título..."
                   value={taskSearch}
                   onChange={(e) => setTaskSearch(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:border-blue-400 transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:border-brand-red transition-all"
                 />
               </div>
               
               <div className="flex bg-slate-100 p-1 rounded-2xl w-full md:w-auto">
                 <button 
                   onClick={() => setTaskFilter('all')}
-                  className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-all ${taskFilter === 'all' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-all ${taskFilter === 'all' ? 'bg-white text-brand-red shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                 >
                   Todas
                 </button>
@@ -1354,11 +1346,11 @@ function AppContent() {
                 {/* Task List for Admin */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <FileText size={18} className="text-blue-600" /> Listado de Tareas Publicadas
+                    <FileText size={18} className="text-brand-red" /> Listado de Tareas Publicadas
                   </h3>
                   <div className="grid gap-4">
                     {tasks.map((task, idx) => (
-                      <div key={task.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-blue-200 transition-colors">
+                      <div key={task.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-brand-red/20 transition-colors">
                         <div className="flex items-center gap-4 min-w-0">
                           <div className="flex flex-col gap-1 shrink-0">
                             <button 
@@ -1384,7 +1376,7 @@ function AppContent() {
                         <div className="flex items-center gap-2">
                           <button 
                             onClick={() => { setEditingTask(task.id); setEditTaskData({...task}); }}
-                            className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
+                            className="p-2 text-slate-400 hover:text-brand-red hover:bg-brand-red/5 rounded-lg transition-all"
                           >
                             <Edit size={18} />
                           </button>
@@ -1404,9 +1396,9 @@ function AppContent() {
                 <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
                   <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                     <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                      <History size={18} className="text-blue-600" /> Historial de Entregas Recibidas
+                      <History size={18} className="text-brand-red" /> Historial de Entregas Recibidas
                     </h3>
-                    <span className="text-[10px] font-black uppercase bg-blue-100 text-blue-700 px-2 py-1 rounded-lg">
+                    <span className="text-[10px] font-black uppercase bg-brand-red/10 text-brand-red px-2 py-1 rounded-lg">
                       {submissions.length} Total
                     </span>
                   </div>
@@ -1427,7 +1419,7 @@ function AppContent() {
                           <tr key={sub.id} className="hover:bg-slate-50/50 transition-colors group">
                             <td className="p-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
+                                <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center font-bold text-xs">
                                   {sub.studentName.charAt(0)}
                                 </div>
                                 <span className="text-sm font-bold text-slate-700">{sub.studentName}</span>
@@ -1440,7 +1432,7 @@ function AppContent() {
                                 href={sub.fileUrl} 
                                 target="_blank" 
                                 rel="noreferrer"
-                                className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
+                                className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-red hover:text-brand-red/80 bg-brand-red/10 px-3 py-1.5 rounded-lg transition-colors"
                               >
                                 <ExternalLink size={12} /> Ver Entrega
                               </a>
@@ -1513,26 +1505,26 @@ function AppContent() {
                         <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
                           <div className="flex-1 min-w-0 w-full">
                             <div className="flex items-center gap-3 mb-4">
-                              <span className="bg-blue-50 text-blue-600 p-2.5 rounded-2xl shrink-0">
+                              <span className="bg-brand-red/10 text-brand-red p-2.5 rounded-2xl shrink-0">
                                 <FileText size={24} />
                               </span>
-                              <h3 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight group-hover:text-blue-600 transition-colors truncate">{task.title}</h3>
+                              <h3 className="text-xl md:text-2xl font-black text-brand-dark tracking-tight group-hover:text-brand-red transition-colors truncate">{task.title}</h3>
                             </div>
-                            <div className="prose prose-slate prose-sm max-w-none text-slate-600 leading-relaxed bg-slate-50/50 p-4 md:p-6 rounded-2xl border border-slate-100">
+                            <div className="prose prose-slate prose-sm max-w-none text-slate-600 leading-relaxed bg-brand-gray/50 p-4 md:p-6 rounded-2xl border border-slate-100">
                               <Markdown>{task.description}</Markdown>
                             </div>
                             {task.attachmentUrl && (
-                              <div className="mt-4 flex items-center gap-3 bg-blue-50/30 p-4 rounded-2xl border border-blue-100/50 overflow-hidden">
-                                <div className="bg-blue-100 p-2 rounded-xl text-blue-600 shrink-0">
+                              <div className="mt-4 flex items-center gap-3 bg-brand-red/5 p-4 rounded-2xl border border-brand-red/10 overflow-hidden">
+                                <div className="bg-brand-red/10 p-2 rounded-xl text-brand-red shrink-0">
                                   <LinkIcon size={18} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-[10px] font-black text-blue-800 uppercase tracking-wider mb-0.5">Material de la Tarea</p>
+                                  <p className="text-[10px] font-black text-brand-red uppercase tracking-wider mb-0.5">Material de la Tarea</p>
                                   <a 
                                     href={task.attachmentUrl} 
                                     target="_blank" 
                                     rel="noreferrer" 
-                                    className="text-sm font-bold text-blue-600 hover:text-blue-700 truncate block transition-colors"
+                                    className="text-sm font-bold text-brand-red hover:text-brand-red/80 truncate block transition-colors"
                                   >
                                     {task.attachmentUrl}
                                   </a>
@@ -1541,7 +1533,7 @@ function AppContent() {
                                   href={task.attachmentUrl} 
                                   target="_blank" 
                                   rel="noreferrer"
-                                  className="p-2 bg-white text-blue-600 rounded-xl border border-blue-100 shadow-sm hover:bg-blue-50 transition-all shrink-0"
+                                  className="p-2 bg-white text-brand-red rounded-xl border border-brand-red/10 shadow-sm hover:bg-brand-red/5 transition-all shrink-0"
                                 >
                                   <ExternalLink size={16} />
                                 </a>
@@ -1552,7 +1544,7 @@ function AppContent() {
                           <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-3 w-full md:w-auto md:min-w-[160px] pt-4 md:pt-0 border-t md:border-t-0 border-slate-100">
                             {submission ? (
                               <div className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-2xl font-black text-[10px] uppercase tracking-wider shrink-0 ${
-                                submission.status === 'Calificado' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                                submission.status === 'Calificado' ? 'bg-green-100 text-green-700' : 'bg-brand-red/10 text-brand-red'
                               }`}>
                                 {submission.status === 'Calificado' ? (
                                   <><CheckCircle size={14} /> Aprobado</>
@@ -1574,11 +1566,11 @@ function AppContent() {
 
                         {!submission && profile.role === 'alumno' && (
                           <div className="mt-8 pt-8 border-t border-slate-100">
-                            <div className="bg-blue-50/50 border border-blue-100 p-5 rounded-2xl flex gap-4 items-start mb-6">
-                              <div className="bg-blue-100 p-2 rounded-xl text-blue-600 mt-0.5">
+                            <div className="bg-brand-red/5 border border-brand-red/10 p-5 rounded-2xl flex gap-4 items-start mb-6">
+                              <div className="bg-brand-red/10 p-2 rounded-xl text-brand-red mt-0.5">
                                 <Info size={20} />
                               </div>
-                              <div className="text-sm text-blue-800 leading-relaxed">
+                              <div className="text-sm text-brand-red leading-relaxed">
                                 <p className="font-black mb-1">Instrucciones de Entrega</p>
                                 <p>Sube tu archivo a una plataforma de almacenamiento (Google Drive, Dropbox, etc.) y pega el enlace público aquí. Asegúrate de que el archivo sea accesible para el profesor.</p>
                               </div>
@@ -1592,13 +1584,13 @@ function AppContent() {
                                   placeholder="Pega aquí el enlace a tu tarea..."
                                   value={submissionUrl[task.id] || ''}
                                   onChange={(e) => setSubmissionUrl(prev => ({ ...prev, [task.id]: e.target.value }))}
-                                  className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50/50 transition-all"
+                                  className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl text-sm outline-none focus:border-brand-red focus:ring-4 focus:ring-brand-red/5 transition-all"
                                 />
                               </div>
                               <button 
                                 onClick={() => handleLinkSubmission(task.id, task.title)}
                                 disabled={uploading === `submission-${task.id}`}
-                                className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-black hover:bg-blue-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-100 active:scale-95"
+                                className="px-8 py-4 bg-brand-red text-white rounded-2xl font-black hover:bg-brand-red/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-brand-red/20 active:scale-95"
                               >
                                 {uploading === `submission-${task.id}` ? (
                                   <Loader2 size={20} className="animate-spin" />
@@ -1615,17 +1607,17 @@ function AppContent() {
                         {submission && (
                           <div className="mt-8 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-6">
                             <div className="flex items-center gap-4">
-                              <div className="w-16 h-16 rounded-3xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                              <div className="w-16 h-16 rounded-3xl bg-brand-red/5 border border-brand-red/10 flex items-center justify-center text-brand-red">
                                 <ExternalLink size={28} />
                               </div>
                               <div>
-                                <p className="text-sm font-black text-slate-800">Tu Entrega</p>
+                                <p className="text-sm font-black text-brand-dark">Tu Entrega</p>
                                 <p className="text-xs text-slate-400 mb-2">Enviado el {new Date(submission.date).toLocaleDateString()}</p>
                                 <a 
                                   href={submission.fileUrl} 
                                   target="_blank" 
                                   rel="noreferrer" 
-                                  className="inline-flex items-center gap-2 text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-4 py-2 rounded-xl transition-all group/link"
+                                  className="inline-flex items-center gap-2 text-xs font-bold text-brand-red hover:text-brand-red/80 bg-brand-red/10 px-4 py-2 rounded-xl transition-all group/link"
                                 >
                                   Ver enlace enviado <ExternalLink size={12} className="group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
                                 </a>
@@ -1687,8 +1679,8 @@ function AppContent() {
                       <td className="p-4 text-sm text-slate-500">{u.email}</td>
                       <td className="p-4">
                         <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded ${
-                          u.role === 'profesor' ? 'bg-blue-100 text-blue-700' : 
-                          u.role === 'administrador' ? 'bg-purple-100 text-purple-700' : 
+                          u.role === 'profesor' ? 'bg-brand-red/10 text-brand-red' : 
+                          u.role === 'administrador' ? 'bg-brand-dark text-white' : 
                           'bg-slate-100 text-slate-700'
                         }`}>
                           {u.role}
@@ -1707,7 +1699,7 @@ function AppContent() {
                         {u.status === 'pending' && (
                           <button 
                             onClick={() => handleApproveUser(u.uid)}
-                            className="bg-green-500 text-white px-3 py-1 rounded text-[10px] font-bold hover:bg-green-600 transition-colors"
+                            className="bg-brand-red text-white px-3 py-1 rounded text-[10px] font-bold hover:bg-brand-red/90 transition-all active:scale-95"
                           >
                             Aprobar
                           </button>
@@ -1840,7 +1832,7 @@ function AppContent() {
                   </button>
                   <button 
                     onClick={handleUpdateTask}
-                    className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
+                    className="flex-1 py-3 bg-brand-red text-white rounded-xl font-bold hover:bg-brand-red/90 transition-all shadow-lg shadow-brand-red/10 active:scale-95"
                   >
                     Guardar
                   </button>
@@ -1872,7 +1864,7 @@ function AppContent() {
                   </button>
                   <button 
                     onClick={confirmModal.onConfirm}
-                    className="bg-red-600 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
+                    className="bg-brand-red text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-brand-red/90 transition-all active:scale-95"
                   >
                     Eliminar
                   </button>
