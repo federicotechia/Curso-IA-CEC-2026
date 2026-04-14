@@ -56,6 +56,28 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
+const BrandLogo = ({ variant = 'full', light = false, className = "" }: { variant?: 'full' | 'cec', light?: boolean, className?: string }) => {
+  const textColor = light ? 'text-white' : 'text-brand-dark';
+  if (variant === 'cec') {
+    return (
+      <div className={`flex flex-col leading-none ${className}`}>
+        <span className={`text-2xl font-black ${textColor} tracking-tighter`}>CEC</span>
+        <span className={`text-[8px] font-bold ${textColor} tracking-widest uppercase opacity-80`}>Comunidad Educativa Crucianelli</span>
+      </div>
+    );
+  }
+  return (
+    <div className={`flex items-center gap-3 ${className}`}>
+      <div className="w-1.5 h-12 bg-brand-red rounded-full" />
+      <div className="flex flex-col leading-none">
+        <span className={`text-[10px] font-bold ${textColor} tracking-widest`}>FUNDACIÓN</span>
+        <span className={`text-xl font-black ${textColor} tracking-tighter`}>NAZARENO</span>
+        <span className={`text-xl font-black ${textColor} tracking-tighter`}>CRUCIANELLI</span>
+      </div>
+    </div>
+  );
+};
+
 function SurveyView({ profile, onComplete, onLogout }: { profile: UserProfile, onComplete: (data: any) => void, onLogout: () => void }) {
   const [step, setStep] = useState(0);
   const [responses, setResponses] = useState({
@@ -211,15 +233,15 @@ function SurveyView({ profile, onComplete, onLogout }: { profile: UserProfile, o
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-brand-dark p-4">
+    <div className="min-h-screen flex items-center justify-center bg-brand-gray p-4">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white p-8 md:p-10 rounded-[32px] shadow-2xl w-full max-w-lg border-t-8 border-brand-red relative overflow-hidden"
+        className="bg-white p-8 md:p-10 rounded-[40px] shadow-2xl w-full max-w-lg border-b-8 border-brand-red relative overflow-hidden"
       >
         {/* Progress Bar */}
         {step > 0 && (
-          <div className="absolute top-0 left-0 w-full h-1 bg-slate-100">
+          <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100">
             <motion.div 
               className="h-full bg-brand-red"
               initial={{ width: 0 }}
@@ -230,7 +252,7 @@ function SurveyView({ profile, onComplete, onLogout }: { profile: UserProfile, o
 
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
-            <div className="w-10 h-10 bg-brand-red rounded-lg flex items-center justify-center font-bold text-white shadow-lg shadow-brand-red/20">IA</div>
+            <BrandLogo variant="cec" className="scale-75 origin-left" />
             {step > 0 && (
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Paso {step} de {steps.length - 1}</span>
             )}
@@ -957,34 +979,49 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-brand-dark">
-        <Loader2 className="text-brand-red animate-spin" size={48} />
+      <div className="min-h-screen flex items-center justify-center bg-brand-gray">
+        <div className="flex flex-col items-center gap-6">
+          <BrandLogo className="animate-pulse" />
+          <Loader2 className="text-brand-red animate-spin" size={32} />
+        </div>
       </div>
     );
   }
 
   if (!user || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-brand-dark p-4">
+      <div className="min-h-screen flex items-center justify-center bg-brand-gray p-4 relative overflow-hidden">
+        {/* Decorative Background Elements */}
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] opacity-5 pointer-events-none">
+          <svg viewBox="0 0 100 100" className="w-full h-full text-brand-red fill-current">
+            <path d="M10,10 L90,90 M90,10 L10,90" stroke="currentColor" strokeWidth="20" />
+          </svg>
+        </div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] opacity-5 pointer-events-none">
+          <svg viewBox="0 0 100 100" className="w-full h-full text-brand-dark fill-current">
+            <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="15" fill="none" />
+          </svg>
+        </div>
+
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md border-t-8 border-brand-red"
+          className="bg-white p-12 rounded-[48px] shadow-2xl w-full max-w-md border-b-8 border-brand-red relative z-10"
         >
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-brand-red rounded-2xl flex items-center justify-center font-bold text-2xl text-white mx-auto mb-4 shadow-lg shadow-brand-red/20">IA</div>
-            <h1 className="text-3xl font-extrabold text-brand-dark tracking-tight">Curso IA 2026</h1>
-            <p className="text-slate-500 mt-2 font-medium">CEC - Plataforma Educativa</p>
+          <div className="text-center mb-10">
+            <BrandLogo className="justify-center mb-8" />
+            <h1 className="text-3xl font-black text-brand-dark tracking-tighter">Plataforma IA</h1>
+            <p className="text-slate-500 mt-2 font-bold uppercase text-[10px] tracking-[0.2em]">Comunidad Educativa Crucianelli</p>
           </div>
           <div className="space-y-4">
             <button 
               onClick={handleLogin}
-              className="w-full p-4 bg-brand-red text-white rounded-xl font-bold hover:bg-brand-red/90 transition-all shadow-lg shadow-brand-red/20 flex items-center justify-center gap-3 active:scale-95"
+              className="w-full p-5 bg-brand-red text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-brand-red/90 transition-all shadow-xl shadow-brand-red/20 flex items-center justify-center gap-3 active:scale-95"
             >
-              <Users size={20} /> Acceder con Google
+              <Users size={18} /> Acceder con Google
             </button>
-            <p className="text-center text-[10px] text-slate-400 px-4 uppercase tracking-widest font-bold">
-              Acceso exclusivo para alumnos y profesores
+            <p className="text-center text-[9px] text-slate-400 px-4 uppercase tracking-[0.15em] font-black leading-relaxed">
+              Acceso exclusivo para la red educativa de la Fundación
             </p>
           </div>
         </motion.div>
@@ -994,18 +1031,19 @@ function AppContent() {
 
   if (profile.status === 'pending') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-brand-dark p-4">
-        <div className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md text-center border-t-8 border-amber-500">
-          <Clock className="mx-auto text-amber-500 mb-6" size={56} />
-          <h2 className="text-2xl font-extrabold text-brand-dark mb-3">Registro Pendiente</h2>
-          <p className="text-slate-600 mb-8 leading-relaxed">
-            Hola <strong className="text-brand-dark">{profile.displayName}</strong>, tu solicitud ha sido enviada. Un profesor debe aprobar tu acceso antes de que puedas ver el contenido.
+      <div className="min-h-screen flex items-center justify-center bg-brand-gray p-4">
+        <div className="bg-white p-12 rounded-[48px] shadow-2xl w-full max-w-md text-center border-b-8 border-amber-500 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+          <Clock className="mx-auto text-amber-500 mb-8" size={64} />
+          <h2 className="text-2xl font-black text-brand-dark mb-3 tracking-tighter">Registro Pendiente</h2>
+          <p className="text-slate-500 text-sm font-medium leading-relaxed mb-8">
+            Hola <strong className="text-brand-dark">{profile.displayName}</strong>, tu solicitud ha sido enviada. El equipo de la Fundación debe aprobar tu acceso antes de que puedas ver el contenido.
           </p>
           <button 
             onClick={handleLogout}
-            className="text-slate-400 hover:text-brand-red transition-colors flex items-center gap-2 mx-auto font-bold text-sm uppercase tracking-wider"
+            className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
           >
-            <LogOut size={16} /> Cerrar Sesión
+            <LogOut size={18} /> Cerrar Sesión
           </button>
         </div>
       </div>
@@ -1017,7 +1055,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-slate-50">
+    <div className="min-h-screen flex flex-col md:flex-row bg-brand-gray">
       {/* Notifications */}
       <AnimatePresence>
         {notification && (
@@ -1036,12 +1074,16 @@ function AppContent() {
       </AnimatePresence>
 
       {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-brand-dark text-white p-6 flex flex-col shadow-2xl z-20">
-        <div className="flex items-center gap-3 mb-10">
-          <div className="w-10 h-10 bg-brand-red rounded-lg flex items-center justify-center font-bold text-lg shrink-0 shadow-lg shadow-brand-red/20">IA</div>
-          <div className="flex flex-col">
-            <span className="font-bold text-sm tracking-tight leading-none">Curso IA 2026</span>
-            <span className="text-[10px] font-black text-brand-red tracking-widest">CEC</span>
+      <aside className="w-full md:w-72 bg-brand-dark text-white p-8 flex flex-col shadow-2xl z-20 relative overflow-hidden">
+        {/* Sidebar Background Accent */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-red/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+        
+        <div className="flex items-center gap-4 mb-12 relative z-10">
+          <BrandLogo variant="cec" light className="scale-90 origin-left" />
+          <div className="h-8 w-px bg-white/20 shrink-0" />
+          <div className="flex flex-col leading-none">
+            <span className="font-black text-sm tracking-tighter text-white">CURSO IA</span>
+            <span className="text-[10px] font-bold text-brand-red tracking-widest">2026</span>
           </div>
         </div>
         
@@ -1094,11 +1136,17 @@ function AppContent() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-4 md:p-10 overflow-y-auto bg-brand-gray/30">
-        <header className="mb-8 flex justify-between items-center">
-          <h2 className="text-3xl font-extrabold text-brand-dark tracking-tight">
-            {activeTab === 'clases' ? 'Módulos del Curso' : activeTab === 'foro' ? 'Foro de Consultas' : activeTab === 'tareas' ? 'Gestión de Tareas' : 'Administración de Usuarios'}
-          </h2>
+      <main className="flex-1 p-4 md:p-10 overflow-y-auto bg-brand-gray relative">
+        {/* Main Content Background Accents */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-red/5 rounded-full -mr-48 -mt-48 blur-3xl pointer-events-none" />
+        
+        <header className="mb-12 flex justify-between items-center relative z-10">
+          <div>
+            <h2 className="text-4xl font-black text-brand-dark tracking-tighter">
+              {activeTab === 'clases' ? 'Módulos del Curso' : activeTab === 'foro' ? 'Foro de Consultas' : activeTab === 'tareas' ? 'Gestión de Tareas' : 'Administración de Usuarios'}
+            </h2>
+            <div className="w-12 h-1.5 bg-brand-red rounded-full mt-2" />
+          </div>
           {(profile.role === 'profesor' || profile.role === 'administrador') && (activeTab === 'clases' || activeTab === 'tareas') && (
             <button 
               onClick={() => activeTab === 'clases' ? setShowNewModuleModal(true) : setShowNewTaskModal(true)}

@@ -5,11 +5,11 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   
-  --color-brand-red: #E30613;
-  --color-brand-dark: #1A1A1A;
-  --color-brand-gray: #F3F4F6;
+  --color-brand-red: #e81d26;
+  --color-brand-dark: #000238;
+  --color-brand-gray: #e5e5e5;
 }
 
 body {
-  @apply bg-[#F8F9FA] text-[#1A1A1A] font-sans antialiased;
+  @apply bg-brand-gray text-brand-dark font-sans antialiased;
 }
