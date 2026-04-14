@@ -6,12 +6,32 @@
       "type": "object",
       "properties": {
         "email": { "type": "string" },
-        "role": { "type": "string", "enum": ["profesor", "alumno"] },
+        "role": { "type": "string", "enum": ["profesor", "alumno", "administrador"] },
         "status": { "type": "string", "enum": ["pending", "approved"] },
         "displayName": { "type": "string" },
-        "uid": { "type": "string" }
+        "uid": { "type": "string" },
+        "survey_completed": { "type": "boolean" },
+        "suggested_level": { "type": "string", "enum": ["Principiante", "Avanzado"] }
       },
       "required": ["email", "role", "status", "uid"]
+    },
+    "SurveyResponse": {
+      "title": "SurveyResponse",
+      "description": "Diagnostic survey response from a student",
+      "type": "object",
+      "properties": {
+        "user_id": { "type": "string" },
+        "user_name": { "type": "string" },
+        "familiarity": { "type": "number" },
+        "tools": { "type": "array", "items": { "type": "string" } },
+        "frequency": { "type": "string" },
+        "professional_profile": { "type": "string" },
+        "automation_goal": { "type": "string" },
+        "technical_validation": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "suggested_level": { "type": "string", "enum": ["Principiante", "Avanzado"] }
+      },
+      "required": ["user_id", "familiarity", "tools", "frequency", "suggested_level"]
     },
     "ClassModule": {
       "title": "ClassModule",
@@ -96,6 +116,10 @@
     "/submissions/{submissionId}": {
       "schema": "Submission",
       "description": "Task submissions"
+    },
+    "/survey_responses/{responseId}": {
+      "schema": "SurveyResponse",
+      "description": "Diagnostic survey responses"
     }
   }
 }

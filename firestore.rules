@@ -87,7 +87,18 @@ service cloud.firestore {
              data.role in ['profesor', 'alumno', 'administrador'] &&
              data.status in ['pending', 'approved'] &&
              data.uid == userId &&
-             (!('displayName' in data) || (data.displayName is string && data.displayName.size() < 200));
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() < 200)) &&
+             (!('survey_completed' in data) || data.survey_completed is bool) &&
+             (!('suggested_level' in data) || data.suggested_level in ['Principiante', 'Avanzado']);
+    }
+
+    function isValidSurveyResponse(data) {
+      return data.keys().hasAll(['user_id', 'user_name', 'familiarity', 'tools', 'frequency', 'professional_profile', 'automation_goal', 'technical_validation', 'timestamp', 'suggested_level']) &&
+             data.user_id == request.auth.uid &&
+             data.familiarity is number && data.familiarity >= 1 && data.familiarity <= 5 &&
+             data.tools is list &&
+             data.frequency in ['Diario', 'Semanal', 'Mensual', 'Nunca'] &&
+             data.suggested_level in ['Principiante', 'Avanzado'];
     }
 
     function isValidModule(data) {
@@ -138,6 +149,7 @@ service cloud.firestore {
         (isOwner(userId) && request.resource.data.role == resource.data.role && request.resource.data.status == resource.data.status) ||
         isAdmin()
       );
+      allow delete: if isAdmin();
     }
 
     match /modules/{moduleId} {
@@ -169,6 +181,11 @@ service cloud.firestore {
       allow create: if isApproved() && isValidSubmission(request.resource.data) && request.resource.data.studentUid == request.auth.uid && request.resource.data.status == 'Recibido';
       allow update: if isAdmin() && isValidSubmission(request.resource.data);
       allow delete: if isAdmin();
+    }
+
+    match /survey_responses/{responseId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated() && isValidSurveyResponse(request.resource.data);
     }
 
     // Default deny

@@ -38,7 +38,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
-import { ClassModule, ForumPost, Submission, UserProfile, UserRole, Task } from './types';
+import { ClassModule, ForumPost, Submission, UserProfile, UserRole, Task, SurveyResponse } from './types';
 import { auth, db, storage, googleProvider, handleFirestoreError, OperationType, firestoreDatabaseId } from './lib/firebase';
 import { signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { 
@@ -56,6 +56,235 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
+function SurveyView({ profile, onComplete, onLogout }: { profile: UserProfile, onComplete: (data: any) => void, onLogout: () => void }) {
+  const [step, setStep] = useState(0);
+  const [responses, setResponses] = useState({
+    familiarity: 3,
+    tools: [] as string[],
+    frequency: '',
+    professional_profile: '',
+    automation_goal: '',
+    technical_validation: ''
+  });
+
+  const toolsOptions = ['ChatGPT', 'Claude', 'Gemini', 'Midjourney', 'Perplexity', 'Copilot', 'Ninguna'];
+  const frequencyOptions = ['Diario', 'Semanal', 'Mensual', 'Nunca'];
+  const technicalOptions = ['Sí', 'No', 'He oído hablar'];
+
+  const handleNext = () => setStep(s => s + 1);
+  const handleBack = () => setStep(s => s - 1);
+
+  const handleSubmit = () => {
+    onComplete(responses);
+  };
+
+  const isStepValid = () => {
+    if (step === 1) return responses.familiarity >= 1;
+    if (step === 2) return responses.tools.length > 0;
+    if (step === 3) return responses.frequency !== '';
+    if (step === 4) return responses.professional_profile.trim() !== '';
+    if (step === 5) return responses.automation_goal.trim() !== '';
+    if (step === 6) return responses.technical_validation !== '';
+    return true;
+  };
+
+  const steps = [
+    {
+      title: "¡Hola!",
+      content: (
+        <div className="text-center">
+          <p className="text-slate-600 mb-6 leading-relaxed">
+            Antes de empezar, queremos conocerte mejor. Esta encuesta nos ayudará a ajustar los ejemplos de las clases a tu realidad profesional y nivel actual. No te llevará más de 2 minutos.
+          </p>
+          <button onClick={handleNext} className="w-full py-4 bg-brand-red text-white rounded-2xl font-bold hover:bg-brand-red/90 transition-all shadow-lg shadow-brand-red/20 active:scale-95">
+            Comenzar
+          </button>
+        </div>
+      )
+    },
+    {
+      title: "¿Qué tan familiarizado estás con la IA?",
+      content: (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center px-2">
+            {[1, 2, 3, 4, 5].map(n => (
+              <button 
+                key={n}
+                onClick={() => setResponses(r => ({ ...r, familiarity: n }))}
+                className={`w-12 h-12 rounded-xl font-bold transition-all ${responses.familiarity === n ? 'bg-brand-red text-white scale-110 shadow-lg shadow-brand-red/20' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">
+            <span>Nada</span>
+            <span>Experto</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: "¿Qué herramientas conoces o has usado?",
+      content: (
+        <div className="grid grid-cols-2 gap-3">
+          {toolsOptions.map(tool => (
+            <button 
+              key={tool}
+              onClick={() => {
+                setResponses(r => {
+                  const tools = r.tools.includes(tool) 
+                    ? r.tools.filter(t => t !== tool)
+                    : [...r.tools, tool];
+                  return { ...r, tools };
+                });
+              }}
+              className={`p-3 rounded-xl text-sm font-bold border-2 transition-all ${responses.tools.includes(tool) ? 'border-brand-red bg-brand-red/5 text-brand-red' : 'border-slate-100 text-slate-500 hover:border-slate-200'}`}
+            >
+              {tool}
+            </button>
+          ))}
+        </div>
+      )
+    },
+    {
+      title: "¿Con qué frecuencia usas herramientas de IA?",
+      content: (
+        <div className="space-y-3">
+          {frequencyOptions.map(opt => (
+            <button 
+              key={opt}
+              onClick={() => setResponses(r => ({ ...r, frequency: opt }))}
+              className={`w-full p-4 rounded-xl text-left text-sm font-bold border-2 transition-all flex items-center justify-between ${responses.frequency === opt ? 'border-brand-red bg-brand-red/5 text-brand-red' : 'border-slate-100 text-slate-500 hover:border-slate-200'}`}
+            >
+              {opt}
+              {responses.frequency === opt && <CheckCircle size={18} />}
+            </button>
+          ))}
+        </div>
+      )
+    },
+    {
+      title: "¿Cuál es tu perfil profesional?",
+      content: (
+        <div className="space-y-4">
+          <input 
+            type="text"
+            placeholder="Ej: Contador, Abogado, Administrativo..."
+            value={responses.professional_profile}
+            onChange={(e) => setResponses(r => ({ ...r, professional_profile: e.target.value }))}
+            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-brand-red transition-all"
+          />
+        </div>
+      )
+    },
+    {
+      title: "¿Qué tarea específica te gustaría delegar a una IA?",
+      content: (
+        <div className="space-y-4">
+          <textarea 
+            placeholder="Describe una tarea repetitiva o compleja que te gustaría automatizar..."
+            value={responses.automation_goal}
+            onChange={(e) => setResponses(r => ({ ...r, automation_goal: e.target.value }))}
+            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-brand-red transition-all h-32 resize-none"
+          />
+        </div>
+      )
+    },
+    {
+      title: "¿Conoces conceptos como 'Few-shot prompting', 'Temperatura' o 'Tokens'?",
+      content: (
+        <div className="space-y-3">
+          {technicalOptions.map(opt => (
+            <button 
+              key={opt}
+              onClick={() => setResponses(r => ({ ...r, technical_validation: opt }))}
+              className={`w-full p-4 rounded-xl text-left text-sm font-bold border-2 transition-all flex items-center justify-between ${responses.technical_validation === opt ? 'border-brand-red bg-brand-red/5 text-brand-red' : 'border-slate-100 text-slate-500 hover:border-slate-200'}`}
+            >
+              {opt}
+              {responses.technical_validation === opt && <CheckCircle size={18} />}
+            </button>
+          ))}
+        </div>
+      )
+    }
+  ];
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-brand-dark p-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white p-8 md:p-10 rounded-[32px] shadow-2xl w-full max-w-lg border-t-8 border-brand-red relative overflow-hidden"
+      >
+        {/* Progress Bar */}
+        {step > 0 && (
+          <div className="absolute top-0 left-0 w-full h-1 bg-slate-100">
+            <motion.div 
+              className="h-full bg-brand-red"
+              initial={{ width: 0 }}
+              animate={{ width: `${(step / (steps.length - 1)) * 100}%` }}
+            />
+          </div>
+        )}
+
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <div className="w-10 h-10 bg-brand-red rounded-lg flex items-center justify-center font-bold text-white shadow-lg shadow-brand-red/20">IA</div>
+            {step > 0 && (
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Paso {step} de {steps.length - 1}</span>
+            )}
+          </div>
+          <h2 className="text-2xl font-extrabold text-brand-dark tracking-tight leading-tight">
+            {steps[step].title}
+          </h2>
+        </div>
+
+        <div className="mb-10">
+          {steps[step].content}
+        </div>
+
+        {step > 0 && (
+          <div className="flex gap-3">
+            <button 
+              onClick={handleBack}
+              className="px-6 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold hover:bg-slate-200 transition-all"
+            >
+              Atrás
+            </button>
+            {step === steps.length - 1 ? (
+              <button 
+                onClick={handleSubmit}
+                disabled={!isStepValid()}
+                className="flex-1 py-4 bg-brand-red text-white rounded-2xl font-bold hover:bg-brand-red/90 transition-all shadow-lg shadow-brand-red/20 disabled:opacity-50 disabled:shadow-none active:scale-95"
+              >
+                Finalizar
+              </button>
+            ) : (
+              <button 
+                onClick={handleNext}
+                disabled={!isStepValid()}
+                className="flex-1 py-4 bg-brand-red text-white rounded-2xl font-bold hover:bg-brand-red/90 transition-all shadow-lg shadow-brand-red/20 disabled:opacity-50 disabled:shadow-none active:scale-95"
+              >
+                Siguiente
+              </button>
+            )}
+          </div>
+        )}
+
+        <div className="mt-8 pt-8 border-t border-slate-100 flex justify-center">
+          <button 
+            onClick={onLogout}
+            className="text-slate-400 hover:text-brand-red transition-colors flex items-center gap-2 font-bold text-[10px] uppercase tracking-widest"
+          >
+            <LogOut size={14} /> Salir
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function AppContent() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -66,6 +295,8 @@ function AppContent() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [pendingUsers, setPendingUsers] = useState<UserProfile[]>([]);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+  const [surveyResponses, setSurveyResponses] = useState<SurveyResponse[]>([]);
+  const [viewingSurveyResponse, setViewingSurveyResponse] = useState<SurveyResponse | null>(null);
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const [newPost, setNewPost] = useState('');
   const [submissionUrl, setSubmissionUrl] = useState<{ [key: string]: string }>({});
@@ -201,6 +432,12 @@ function AppContent() {
         setAllUsers(snapshot.docs.map(doc => doc.data() as UserProfile));
       }, (error) => handleFirestoreError(error, OperationType.LIST, 'users'));
 
+      // Survey Responses for Admin
+      const surveyQuery = query(collection(db, 'survey_responses'), orderBy('timestamp', 'desc'));
+      const unsubscribeSurvey = onSnapshot(surveyQuery, (snapshot) => {
+        setSurveyResponses(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as SurveyResponse)));
+      }, (error) => handleFirestoreError(error, OperationType.LIST, 'survey_responses'));
+
       return () => {
         unsubscribeModules();
         unsubscribeForum();
@@ -208,6 +445,7 @@ function AppContent() {
         unsubscribeSub();
         unsubscribePending();
         unsubscribeAllUsers();
+        unsubscribeSurvey();
       };
     } else {
       const subQuery = query(collection(db, 'submissions'), where('studentUid', '==', profile.uid));
@@ -234,6 +472,44 @@ function AppContent() {
 
   const handleLogout = async () => {
     await signOut(auth);
+  };
+
+  const handleSurveyComplete = async (responses: any) => {
+    if (!profile) return;
+    
+    // Silent tagging logic
+    const isAdvanced = responses.frequency === 'Diario' && responses.technical_validation === 'Sí';
+    const suggested_level = isAdvanced ? 'Avanzado' as const : 'Principiante' as const;
+
+    try {
+      // 1. Save response
+      const responseId = `${profile.uid}_${Date.now()}`;
+      const surveyData: SurveyResponse = {
+        id: responseId,
+        user_id: profile.uid,
+        user_name: profile.displayName,
+        ...responses,
+        timestamp: new Date().toISOString(),
+        suggested_level
+      };
+      await setDoc(doc(db, 'survey_responses', responseId), surveyData);
+
+      // 2. Update user profile
+      const updatedProfile = { 
+        ...profile, 
+        survey_completed: true, 
+        suggested_level 
+      };
+      await updateDoc(doc(db, 'users', profile.uid), { 
+        survey_completed: true, 
+        suggested_level 
+      });
+      
+      setProfile(updatedProfile);
+      setNotification({ message: '¡Gracias por completar la encuesta!', type: 'success' });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'survey_responses');
+    }
   };
 
   const handleCreateTask = async () => {
@@ -662,6 +938,23 @@ function AppContent() {
     }
   };
 
+  const handleDeleteUser = async (uid: string) => {
+    setConfirmModal({
+      show: true,
+      title: 'Eliminar Usuario',
+      message: '¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'users', uid));
+          setConfirmModal(prev => ({ ...prev, show: false }));
+          setNotification({ message: 'Usuario eliminado correctamente', type: 'success' });
+        } catch (error) {
+          handleFirestoreError(error, OperationType.DELETE, `users/${uid}`);
+        }
+      }
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-brand-dark">
@@ -717,6 +1010,10 @@ function AppContent() {
         </div>
       </div>
     );
+  }
+
+  if (profile.role === 'alumno' && !profile.survey_completed) {
+    return <SurveyView profile={profile} onComplete={handleSurveyComplete} onLogout={handleLogout} />;
   }
 
   return (
@@ -1668,6 +1965,7 @@ function AppContent() {
                   <tr>
                     <th className="p-4 text-xs font-bold uppercase text-slate-400">Nombre</th>
                     <th className="p-4 text-xs font-bold uppercase text-slate-400">Email</th>
+                    <th className="p-4 text-xs font-bold uppercase text-slate-400">Nivel Sugerido</th>
                     <th className="p-4 text-xs font-bold uppercase text-slate-400">Rol Actual</th>
                     <th className="p-4 text-xs font-bold uppercase text-slate-400">Acciones</th>
                   </tr>
@@ -1677,6 +1975,29 @@ function AppContent() {
                     <tr key={u.uid} className="hover:bg-slate-50 transition-colors">
                       <td className="p-4 text-sm font-medium text-slate-700">{u.displayName}</td>
                       <td className="p-4 text-sm text-slate-500">{u.email}</td>
+                      <td className="p-4">
+                        {u.suggested_level ? (
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded ${
+                              u.suggested_level === 'Avanzado' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                            }`}>
+                              {u.suggested_level}
+                            </span>
+                            <button 
+                              onClick={() => {
+                                const resp = surveyResponses.find(r => r.user_id === u.uid);
+                                if (resp) setViewingSurveyResponse(resp);
+                              }}
+                              className="p-1 text-slate-400 hover:text-brand-red transition-colors"
+                              title="Ver Respuestas"
+                            >
+                              <Eye size={16} />
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-slate-300 italic">No completado</span>
+                        )}
+                      </td>
                       <td className="p-4">
                         <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded ${
                           u.role === 'profesor' ? 'bg-brand-red/10 text-brand-red' : 
@@ -1704,12 +2025,85 @@ function AppContent() {
                             Aprobar
                           </button>
                         )}
+                        <button 
+                          onClick={() => handleDeleteUser(u.uid)}
+                          className="p-1 text-slate-400 hover:text-brand-red transition-colors"
+                          title="Eliminar Usuario"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+        {/* Survey Response Modal */}
+        {viewingSurveyResponse && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white rounded-[32px] shadow-2xl w-full max-w-2xl overflow-hidden"
+            >
+              <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <div>
+                  <h3 className="font-black text-xl text-brand-dark tracking-tight">Encuesta de Diagnóstico</h3>
+                  <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">{viewingSurveyResponse.user_name}</p>
+                </div>
+                <button onClick={() => setViewingSurveyResponse(null)} className="p-2 bg-white text-slate-400 hover:text-brand-red rounded-xl shadow-sm transition-all"><X size={20} /></button>
+              </div>
+              <div className="p-8 max-h-[70vh] overflow-y-auto space-y-8 custom-scrollbar">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Familiaridad (1-5)</p>
+                    <p className="text-2xl font-black text-brand-red">{viewingSurveyResponse.familiarity}</p>
+                  </div>
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Frecuencia de Uso</p>
+                    <p className="text-lg font-black text-brand-dark">{viewingSurveyResponse.frequency}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Herramientas Conocidas</p>
+                  <div className="flex flex-wrap gap-2">
+                    {viewingSurveyResponse.tools.map(t => (
+                      <span key={t} className="px-3 py-1.5 bg-brand-red/5 text-brand-red rounded-xl text-xs font-bold border border-brand-red/10">{t}</span>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Perfil Profesional</p>
+                  <p className="text-sm text-slate-700 font-medium leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">{viewingSurveyResponse.professional_profile}</p>
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Objetivo de Automatización</p>
+                  <p className="text-sm text-slate-700 font-medium leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">{viewingSurveyResponse.automation_goal}</p>
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Conocimientos Técnicos</p>
+                  <p className="text-sm text-slate-700 font-medium leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">{viewingSurveyResponse.technical_validation}</p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nivel Sugerido:</span>
+                    <span className={`text-xs font-black uppercase px-3 py-1 rounded-xl ${
+                      viewingSurveyResponse.suggested_level === 'Avanzado' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {viewingSurveyResponse.suggested_level}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-300 font-bold">{new Date(viewingSurveyResponse.timestamp).toLocaleString()}</p>
+                </div>
+              </div>
+            </motion.div>
           </div>
         )}
         {/* New Task Modal */}
@@ -1732,7 +2126,7 @@ function AppContent() {
                     value={newTaskTitle}
                     onChange={(e) => setNewTaskTitle(e.target.value)}
                     placeholder="Ej: Ensayo sobre Ética en IA"
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
                   />
                 </div>
                 <div>
@@ -1741,7 +2135,7 @@ function AppContent() {
                     value={newTaskDescription}
                     onChange={(e) => setNewTaskDescription(e.target.value)}
                     placeholder="Detalla las instrucciones de la tarea..."
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm h-32 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm h-32 resize-none focus:outline-none focus:ring-2 focus:ring-brand-red"
                   />
                 </div>
                 <div>
@@ -1750,7 +2144,7 @@ function AppContent() {
                     type="date" 
                     value={newTaskDeadline}
                     onChange={(e) => setNewTaskDeadline(e.target.value)}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
                   />
                 </div>
                 <div>
@@ -1760,12 +2154,12 @@ function AppContent() {
                     value={newTaskAttachmentUrl}
                     onChange={(e) => setNewTaskAttachmentUrl(e.target.value)}
                     placeholder="https://drive.google.com/..."
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
                   />
                 </div>
                 <button 
                   onClick={handleCreateTask}
-                  className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
+                  className="w-full py-4 bg-brand-red text-white rounded-xl font-bold hover:bg-brand-red/90 transition-all shadow-lg shadow-brand-red/20 active:scale-95"
                 >
                   Publicar Tarea
                 </button>

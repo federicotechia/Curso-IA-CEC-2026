@@ -56,4 +56,20 @@ export interface UserProfile {
   displayName: string;
   role: UserRole;
   status: UserStatus;
+  survey_completed?: boolean;
+  suggested_level?: 'Principiante' | 'Avanzado';
+}
+
+export interface SurveyResponse {
+  id: string;
+  user_id: string;
+  user_name: string;
+  familiarity: number;
+  tools: string[];
+  frequency: string;
+  professional_profile: string;
+  automation_goal: string;
+  technical_validation: string;
+  timestamp: string;
+  suggested_level: 'Principiante' | 'Avanzado';
 }
