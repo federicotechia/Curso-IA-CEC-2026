@@ -94,7 +94,7 @@ const BrandLogo = ({ variant = 'full', light = false, className = "" }: { varian
         <img 
           src={cecUrl} 
           alt="CEC Logo" 
-          className={`h-11 w-auto max-w-[130px] object-contain ${className}`} 
+          className={`h-14 w-auto max-w-[150px] object-contain ${className}`} 
           referrerPolicy="no-referrer"
           onError={() => setCecError(true)}
         />
@@ -1172,14 +1172,14 @@ function AppContent() {
         {/* Sidebar Background Accent */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-red/10 rounded-full -mr-16 -mt-16 blur-2xl" />
         
-        <div className="flex items-center justify-between mb-12 relative z-10 w-full">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between mb-12 relative z-10 w-full px-1">
+          <div className="flex items-center gap-4">
             <BrandLogo variant="cec" light className="shrink-0" />
-            <div className="h-8 w-px bg-white/20 shrink-0" />
+            <div className="h-10 w-px bg-white/20 shrink-0" />
           </div>
           <div className="flex flex-col leading-none text-right shrink-0">
-            <span className="font-black text-sm tracking-tighter text-white">CURSO IA</span>
-            <span className="text-[10px] font-bold text-brand-red tracking-widest">2026</span>
+            <span className="font-black text-xl tracking-tighter text-white">CURSO IA</span>
+            <span className="text-xs font-bold text-brand-red tracking-widest">2026</span>
           </div>
         </div>
         
