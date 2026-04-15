@@ -56,9 +56,50 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
+// Configuración de Marca - Reemplazar con URLs de imágenes si se desea usar logos reales
+const BRAND_CONFIG = {
+  logoUrl: 'https://drive.google.com/file/d/16m2tjbzpzU3rPc1v53viQtOu9ev3QUvu/view?usp=drive_link', // URL para el logo de la Fundación (ej: /logo-fundacion.png)
+  cecLogoUrl: 'https://drive.google.com/file/d/1qKEq4o9SvvnluCJrjn3x-QKi6M8yj6Ca/view?usp=drive_link', // URL para el logo del CEC (ej: /logo-cec.png)
+};
+
+// Función auxiliar para convertir links de Google Drive en links directos de imagen
+const getDirectImageUrl = (url: string) => {
+  if (!url) return '';
+  if (url.includes('drive.google.com')) {
+    // Regex mejorada para capturar el ID de forma más robusta
+    const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (idMatch && idMatch[1]) {
+      // El endpoint de thumbnail es más confiable para evitar bloqueos de Google
+      return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1000`;
+    }
+  }
+  return url;
+};
+
 const BrandLogo = ({ variant = 'full', light = false, className = "" }: { variant?: 'full' | 'cec', light?: boolean, className?: string }) => {
+  const [cecError, setCecError] = useState(false);
+  const [logoError, setLogoError] = useState(false);
   const textColor = light ? 'text-white' : 'text-brand-dark';
+  
+  // Reiniciar errores si cambian las URLs
+  useEffect(() => {
+    setCecError(false);
+    setLogoError(false);
+  }, [BRAND_CONFIG.cecLogoUrl, BRAND_CONFIG.logoUrl]);
+
   if (variant === 'cec') {
+    const cecUrl = getDirectImageUrl(BRAND_CONFIG.cecLogoUrl);
+    if (cecUrl && !cecError) {
+      return (
+        <img 
+          src={cecUrl} 
+          alt="CEC Logo" 
+          className={`h-11 w-auto max-w-[130px] object-contain ${className}`} 
+          referrerPolicy="no-referrer"
+          onError={() => setCecError(true)}
+        />
+      );
+    }
     return (
       <div className={`flex flex-col leading-none ${className}`}>
         <span className={`text-2xl font-black ${textColor} tracking-tighter`}>CEC</span>
@@ -66,6 +107,20 @@ const BrandLogo = ({ variant = 'full', light = false, className = "" }: { varian
       </div>
     );
   }
+
+  const logoUrl = getDirectImageUrl(BRAND_CONFIG.logoUrl);
+  if (logoUrl && !logoError) {
+    return (
+      <img 
+        src={logoUrl} 
+        alt="Fundación Logo" 
+        className={`h-12 w-auto object-contain ${className}`} 
+        referrerPolicy="no-referrer"
+        onError={() => setLogoError(true)}
+      />
+    );
+  }
+
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <div className="w-1.5 h-12 bg-brand-red rounded-full" />
@@ -89,7 +144,11 @@ function SurveyView({ profile, onComplete, onLogout }: { profile: UserProfile, o
     technical_validation: ''
   });
 
-  const toolsOptions = ['ChatGPT', 'Claude', 'Gemini', 'Midjourney', 'Perplexity', 'Copilot', 'Ninguna'];
+  const toolsOptions = [
+    'ChatGPT', 'Claude', 'Gemini', 'Midjourney', 'Perplexity', 'Copilot', 
+    'AI Studio', 'Codex', 'Claude Code', 'Nano Banana', 'Antigravity', 
+    'Cursor', 'Vercel', 'Lovable', 'Ninguna'
+  ];
   const frequencyOptions = ['Diario', 'Semanal', 'Mensual', 'Nunca'];
   const technicalOptions = ['Sí', 'No', 'He oído hablar'];
 
@@ -500,7 +559,10 @@ function AppContent() {
     if (!profile) return;
     
     // Silent tagging logic
-    const isAdvanced = responses.frequency === 'Diario' && responses.technical_validation === 'Sí';
+    const advancedTools = ['AI Studio', 'Codex', 'Claude Code', 'Nano Banana', 'Antigravity', 'Cursor', 'Vercel', 'Lovable'];
+    const hasAdvancedTools = responses.tools.some((t: string) => advancedTools.includes(t));
+    
+    const isAdvanced = (responses.frequency === 'Diario' && responses.technical_validation === 'Sí') || hasAdvancedTools;
     const suggested_level = isAdvanced ? 'Avanzado' as const : 'Principiante' as const;
 
     try {
@@ -532,6 +594,38 @@ function AppContent() {
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'survey_responses');
     }
+  };
+
+  const handleDownloadSurveyCSV = () => {
+    if (surveyResponses.length === 0) return;
+
+    const headers = ['Nombre', 'Email', 'Familiaridad', 'Herramientas', 'Frecuencia', 'Perfil Profesional', 'Objetivo Automatización', 'Validación Técnica', 'Nivel Sugerido', 'Fecha'];
+    const rows = surveyResponses.map(r => {
+      const user = allUsers.find(u => u.uid === r.user_id);
+      return [
+        r.user_name,
+        user?.email || '',
+        r.familiarity,
+        `"${r.tools.join(', ')}"`,
+        r.frequency,
+        `"${r.professional_profile.replace(/"/g, '""')}"`,
+        `"${r.automation_goal.replace(/"/g, '""')}"`,
+        r.technical_validation,
+        r.suggested_level,
+        new Date(r.timestamp).toLocaleString()
+      ];
+    });
+
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `encuestas_ia_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleCreateTask = async () => {
@@ -1078,10 +1172,12 @@ function AppContent() {
         {/* Sidebar Background Accent */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-red/10 rounded-full -mr-16 -mt-16 blur-2xl" />
         
-        <div className="flex items-center gap-4 mb-12 relative z-10">
-          <BrandLogo variant="cec" light className="scale-90 origin-left" />
-          <div className="h-8 w-px bg-white/20 shrink-0" />
-          <div className="flex flex-col leading-none">
+        <div className="flex items-center justify-between mb-12 relative z-10 w-full">
+          <div className="flex items-center gap-3">
+            <BrandLogo variant="cec" light className="shrink-0" />
+            <div className="h-8 w-px bg-white/20 shrink-0" />
+          </div>
+          <div className="flex flex-col leading-none text-right shrink-0">
             <span className="font-black text-sm tracking-tighter text-white">CURSO IA</span>
             <span className="text-[10px] font-bold text-brand-red tracking-widest">2026</span>
           </div>
@@ -2003,10 +2099,16 @@ function AppContent() {
         {activeTab === 'admin' && (profile.role === 'profesor' || profile.role === 'administrador') && (
           <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
-              <div className="p-4 bg-slate-50 border-b border-slate-200 min-w-full">
+              <div className="p-4 bg-slate-50 border-b border-slate-200 min-w-full flex justify-between items-center">
                 <h3 className="font-bold text-slate-700 flex items-center gap-2">
                   <UserPlus size={18} /> Gestión de Usuarios y Roles
                 </h3>
+                <button 
+                  onClick={handleDownloadSurveyCSV}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-brand-dark text-white rounded-lg text-xs font-bold hover:bg-brand-dark/90 transition-all"
+                >
+                  <Download size={14} /> Descargar Encuestas (CSV)
+                </button>
               </div>
               <table className="w-full text-left min-w-[600px]">
                 <thead className="bg-slate-50 border-bottom border-slate-200">
