@@ -49,27 +49,79 @@
             .max-w-5xl { max-width: 100%; }
             .no-print { display: none; }
         }
+        .brand-logo {
+            height: 5rem;
+            width: auto;
+            object-fit: contain;
+        }
+        .brand-logo-footer {
+            height: 3.5rem;
+            width: auto;
+            object-fit: contain;
+        }
     </style>
+    <script>
+        // Configuración de Logos (Links de Google Drive o URLs directas)
+        const BRAND_CONFIG = {
+            logoUrl: 'https://drive.google.com/file/d/16m2tjbzpzU3rPc1v53viQtOu9ev3QUvu/view?usp=drive_link',
+            cecLogoUrl: 'https://drive.google.com/file/d/18aquZAnSXpSVVNjNXUEbdmeTNS-frlT0/view?usp=drive_link'
+        };
+
+        function getDirectImageUrl(url) {
+            if (!url) return '';
+            if (url.includes('drive.google.com')) {
+                const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+                if (idMatch && idMatch[1]) {
+                    return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1000`;
+                }
+            }
+            return url;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const cecLogos = document.querySelectorAll('.cec-logo-placeholder');
+            const foundationLogos = document.querySelectorAll('.foundation-logo-placeholder');
+            
+            const cecSrc = getDirectImageUrl(BRAND_CONFIG.cecLogoUrl);
+            const foundationSrc = getDirectImageUrl(BRAND_CONFIG.logoUrl);
+
+            cecLogos.forEach(el => {
+                if (cecSrc) {
+                    el.innerHTML = `<img src="${cecSrc}" alt="CEC Logo" class="${el.dataset.className}" referrerPolicy="no-referrer">`;
+                }
+            });
+
+            foundationLogos.forEach(el => {
+                if (foundationSrc) {
+                    el.innerHTML = `<img src="${foundationSrc}" alt="Fundación Logo" class="${el.dataset.className}" referrerPolicy="no-referrer">`;
+                }
+            });
+        });
+    </script>
 </head>
 <body class="p-4 md:p-12">
     <div class="max-w-5xl mx-auto space-y-16">
         <!-- Header -->
         <header class="bg-brand-dark text-white p-12 md:p-20 rounded-[4rem] shadow-2xl relative overflow-hidden">
             <div class="absolute top-0 right-0 w-96 h-96 bg-brand-red opacity-10 rounded-full -mr-48 -mt-48 blur-3xl"></div>
-            <div class="relative z-10">
-                <div class="flex items-center gap-6 mb-12">
-                    <div class="flex flex-col leading-none">
-                        <span class="text-4xl font-black tracking-tighter">CEC</span>
-                        <span class="text-[10px] font-bold tracking-widest uppercase opacity-60">Comunidad Educativa Crucianelli</span>
+            <div class="relative z-10 w-full">
+                <div class="flex items-center justify-between mb-16 w-full">
+                    <div class="flex items-center gap-8">
+                        <div class="cec-logo-placeholder" data-class-name="brand-logo">
+                            <div class="flex flex-col leading-none">
+                                <span class="text-4xl font-black tracking-tighter">CEC</span>
+                                <span class="text-[10px] font-bold tracking-widest uppercase opacity-60">Comunidad Educativa Crucianelli</span>
+                            </div>
+                        </div>
+                        <div class="h-16 w-px bg-white/20"></div>
                     </div>
-                    <div class="h-12 w-px bg-white/20"></div>
-                    <div class="flex flex-col leading-none">
-                        <span class="font-black text-xl tracking-tighter">CURSO IA</span>
-                        <span class="text-[10px] font-bold text-brand-red tracking-widest">2026</span>
+                    <div class="flex flex-col leading-none text-right">
+                        <span class="font-black text-4xl tracking-tighter">CURSO IA</span>
+                        <span class="text-lg font-bold text-brand-red tracking-widest">2026</span>
                     </div>
                 </div>
-                <h1 class="text-6xl font-black tracking-tighter mb-6 leading-none">Guía Visual del Alumno</h1>
-                <p class="text-slate-400 text-xl font-medium max-w-2xl leading-relaxed">
+                <h1 class="text-6xl md:text-8xl font-black tracking-tighter mb-8 leading-none">Guía Visual del Alumno</h1>
+                <p class="text-slate-400 text-2xl font-medium leading-relaxed">
                     Aprende a navegar por tu nueva plataforma de aprendizaje. Sigue estos pasos para completar tu matriculación y comenzar a cursar.
                 </p>
             </div>
@@ -321,14 +373,20 @@
 
         <!-- Footer -->
         <footer class="text-center py-16 border-t border-slate-300">
-            <div class="flex justify-center items-center gap-4 mb-6">
-                <span class="text-2xl font-black tracking-tighter opacity-20">CEC</span>
-                <div class="h-6 w-px bg-slate-300"></div>
-                <span class="text-2xl font-black tracking-tighter opacity-20">FUNDACIÓN</span>
+            <div class="max-w-4xl mx-auto">
+                <div class="flex justify-between items-center mb-10 w-full px-4">
+                    <div class="cec-logo-placeholder" data-class-name="brand-logo-footer">
+                        <span class="text-2xl font-black tracking-tighter opacity-20">CEC</span>
+                    </div>
+                    <div class="h-12 w-px bg-slate-300"></div>
+                    <div class="foundation-logo-placeholder" data-class-name="brand-logo-footer">
+                        <span class="text-2xl font-black tracking-tighter opacity-20">FUNDACIÓN</span>
+                    </div>
+                </div>
+                <p class="text-slate-500 font-bold uppercase tracking-widest text-sm">
+                    © 2026 Fundación Nazareno Crucianelli - Comunidad Educativa Crucianelli
+                </p>
             </div>
-            <p class="text-slate-500 font-bold uppercase tracking-widest text-xs">
-                © 2026 Fundación Nazareno Crucianelli - Comunidad Educativa Crucianelli
-            </p>
         </footer>
     </div>
 </body>
