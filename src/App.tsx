@@ -59,7 +59,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 // Configuración de Marca - Reemplazar con URLs de imágenes si se desea usar logos reales
 const BRAND_CONFIG = {
   logoUrl: 'https://drive.google.com/file/d/16m2tjbzpzU3rPc1v53viQtOu9ev3QUvu/view?usp=drive_link', // URL para el logo de la Fundación (ej: /logo-fundacion.png)
-  cecLogoUrl: 'https://drive.google.com/file/d/1qKEq4o9SvvnluCJrjn3x-QKi6M8yj6Ca/view?usp=drive_link', // URL para el logo del CEC (ej: /logo-cec.png)
+  cecLogoUrl: 'https://drive.google.com/file/d/18aquZAnSXpSVVNjNXUEbdmeTNS-frlT0/view?usp=drive_link', // URL para el logo del CEC (ej: /logo-cec.png)
 };
 
 // Función auxiliar para convertir links de Google Drive en links directos de imagen
@@ -94,7 +94,7 @@ const BrandLogo = ({ variant = 'full', light = false, className = "" }: { varian
         <img 
           src={cecUrl} 
           alt="CEC Logo" 
-          className={`h-14 w-auto max-w-[150px] object-contain ${className}`} 
+          className={`h-20 w-auto max-w-[180px] object-contain ${className}`} 
           referrerPolicy="no-referrer"
           onError={() => setCecError(true)}
         />
@@ -1172,14 +1172,14 @@ function AppContent() {
         {/* Sidebar Background Accent */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-red/10 rounded-full -mr-16 -mt-16 blur-2xl" />
         
-        <div className="flex items-center justify-between mb-12 relative z-10 w-full px-1">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between mb-12 relative z-10 w-full px-1 gap-4">
+          <div className="flex items-center gap-8">
             <BrandLogo variant="cec" light className="shrink-0" />
-            <div className="h-10 w-px bg-white/20 shrink-0" />
+            <div className="h-12 w-px bg-white/20 shrink-0" />
           </div>
           <div className="flex flex-col leading-none text-right shrink-0">
-            <span className="font-black text-xl tracking-tighter text-white">CURSO IA</span>
-            <span className="text-xs font-bold text-brand-red tracking-widest">2026</span>
+            <span className="font-black text-2xl tracking-tighter text-white">CURSO IA</span>
+            <span className="text-sm font-bold text-brand-red tracking-widest">2026</span>
           </div>
         </div>
         
