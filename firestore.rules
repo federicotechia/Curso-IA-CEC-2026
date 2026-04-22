@@ -97,8 +97,9 @@ service cloud.firestore {
              data.user_id == request.auth.uid &&
              data.familiarity is number && data.familiarity >= 1 && data.familiarity <= 5 &&
              data.tools is list &&
-             data.frequency in ['Diario', 'Semanal', 'Mensual', 'Nunca'] &&
-             data.suggested_level in ['Principiante', 'Avanzado'];
+             data.frequency is string &&
+             data.suggested_level in ['Principiante', 'Avanzado'] &&
+             (!('custom_responses' in data) || data.custom_responses is map);
     }
 
     function isValidModule(data) {
@@ -135,6 +136,15 @@ service cloud.firestore {
              data.order is number;
     }
 
+    function isValidSurveyConfig(data) {
+      return data.keys().hasAll(['toolsOptions', 'advancedTools', 'frequencyOptions', 'technicalOptions', 'advancedThresholdFrequency', 'advancedThresholdTechnical']) &&
+             data.toolsOptions is list &&
+             data.advancedTools is list &&
+             data.frequencyOptions is list &&
+             data.technicalOptions is list &&
+             (!('customQuestions' in data) || data.customQuestions is list);
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
@@ -150,6 +160,11 @@ service cloud.firestore {
         isAdmin()
       );
       allow delete: if isAdmin();
+    }
+    
+    match /config/survey {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() && isValidSurveyConfig(request.resource.data);
     }
 
     match /modules/{moduleId} {

@@ -72,4 +72,5 @@ export interface SurveyResponse {
   technical_validation: string;
   timestamp: string;
   suggested_level: 'Principiante' | 'Avanzado';
+  custom_responses?: Record<string, string>;
 }

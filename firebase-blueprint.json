@@ -29,7 +29,8 @@
         "automation_goal": { "type": "string" },
         "technical_validation": { "type": "string" },
         "timestamp": { "type": "string" },
-        "suggested_level": { "type": "string", "enum": ["Principiante", "Avanzado"] }
+        "suggested_level": { "type": "string", "enum": ["Principiante", "Avanzado"] },
+        "custom_responses": { "type": "object" }
       },
       "required": ["user_id", "familiarity", "tools", "frequency", "suggested_level"]
     },
@@ -94,12 +95,42 @@
         "status": { "type": "string", "enum": ["Recibido", "Calificado"] }
       },
       "required": ["studentUid", "taskId", "fileName", "date", "status"]
+    },
+    "SurveyConfig": {
+      "title": "SurveyConfig",
+      "description": "Configuration for the diagnostic survey",
+      "type": "object",
+      "properties": {
+        "toolsOptions": { "type": "array", "items": { "type": "string" } },
+        "advancedTools": { "type": "array", "items": { "type": "string" } },
+        "frequencyOptions": { "type": "array", "items": { "type": "string" } },
+        "technicalOptions": { "type": "array", "items": { "type": "string" } },
+        "advancedThresholdFrequency": { "type": "string" },
+        "advancedThresholdTechnical": { "type": "string" },
+        "customQuestions": { 
+          "type": "array", 
+          "items": { 
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "text": { "type": "string" },
+              "type": { "type": "string", "enum": ["text", "select"] },
+              "options": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      },
+      "required": ["toolsOptions", "advancedTools", "frequencyOptions", "technicalOptions"]
     }
   },
   "firestore": {
     "/users/{uid}": {
       "schema": "User",
       "description": "User profiles"
+    },
+    "/config/survey": {
+      "schema": "SurveyConfig",
+      "description": "Diagnostic survey configuration"
     },
     "/modules/{moduleId}": {
       "schema": "ClassModule",

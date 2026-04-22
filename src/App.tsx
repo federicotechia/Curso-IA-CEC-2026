@@ -56,6 +56,46 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
+interface CustomQuestion {
+  id: string;
+  text: string;
+  type: 'text' | 'select';
+  options?: string[];
+  required?: boolean;
+}
+
+interface SurveyConfig {
+  toolsOptions: string[];
+  advancedTools: string[];
+  frequencyOptions: string[];
+  technicalOptions: string[];
+  advancedThresholdFrequency: string;
+  advancedThresholdTechnical: string;
+  customQuestions?: CustomQuestion[];
+}
+
+const DEFAULT_SURVEY_CONFIG: SurveyConfig = {
+  toolsOptions: [
+    'ChatGPT', 'Claude', 'Gemini', 'Midjourney', 'Perplexity', 'Copilot', 
+    'AI Studio', 'Codex', 'Claude Code', 'Nano Banana', 'Antigravity', 
+    'Cursor', 'Vercel', 'Lovable', 'Ninguna'
+  ],
+  advancedTools: ['AI Studio', 'Codex', 'Claude Code', 'Nano Banana', 'Antigravity', 'Cursor', 'Vercel', 'Lovable'],
+  frequencyOptions: ['Diario', 'Semanal', 'Mensual', 'Nunca'],
+  technicalOptions: ['Sí', 'No', 'He oído hablar'],
+  advancedThresholdFrequency: 'Diario',
+  advancedThresholdTechnical: 'Sí',
+  customQuestions: [
+    {
+      id: 'has_laptop',
+      text: '¿Cuentas con una notebook personal para poder instalar herramientas de desarrollo?',
+      type: 'select',
+      options: ['Sí', 'No'],
+      required: true
+    }
+  ]
+};
+
 // Configuración de Marca - Reemplazar con URLs de imágenes si se desea usar logos reales
 const BRAND_CONFIG = {
   logoUrl: 'https://drive.google.com/file/d/16m2tjbzpzU3rPc1v53viQtOu9ev3QUvu/view?usp=drive_link', // URL para el logo de la Fundación (ej: /logo-fundacion.png)
@@ -133,7 +173,7 @@ const BrandLogo = ({ variant = 'full', light = false, className = "" }: { varian
   );
 };
 
-function SurveyView({ profile, onComplete, onLogout }: { profile: UserProfile, onComplete: (data: any) => void, onLogout: () => void }) {
+function SurveyView({ profile, config, onComplete, onLogout }: { profile: UserProfile, config: SurveyConfig, onComplete: (data: any) => void, onLogout: () => void }) {
   const [step, setStep] = useState(0);
   const [responses, setResponses] = useState({
     familiarity: 3,
@@ -141,16 +181,14 @@ function SurveyView({ profile, onComplete, onLogout }: { profile: UserProfile, o
     frequency: '',
     professional_profile: '',
     automation_goal: '',
-    technical_validation: ''
+    technical_validation: '',
+    custom_responses: {} as Record<string, string>
   });
 
-  const toolsOptions = [
-    'ChatGPT', 'Claude', 'Gemini', 'Midjourney', 'Perplexity', 'Copilot', 
-    'AI Studio', 'Codex', 'Claude Code', 'Nano Banana', 'Antigravity', 
-    'Cursor', 'Vercel', 'Lovable', 'Ninguna'
-  ];
-  const frequencyOptions = ['Diario', 'Semanal', 'Mensual', 'Nunca'];
-  const technicalOptions = ['Sí', 'No', 'He oído hablar'];
+  const toolsOptions = config.toolsOptions;
+  const frequencyOptions = config.frequencyOptions;
+  const technicalOptions = config.technicalOptions;
+  const customQuestions = config.customQuestions || [];
 
   const handleNext = () => setStep(s => s + 1);
   const handleBack = () => setStep(s => s - 1);
@@ -166,10 +204,19 @@ function SurveyView({ profile, onComplete, onLogout }: { profile: UserProfile, o
     if (step === 4) return responses.professional_profile.trim() !== '';
     if (step === 5) return responses.automation_goal.trim() !== '';
     if (step === 6) return responses.technical_validation !== '';
+    
+    // Custom steps
+    const customStepIdx = step - 7;
+    if (customStepIdx >= 0 && customStepIdx < customQuestions.length) {
+      const q = customQuestions[customStepIdx];
+      if (q.required) {
+        return !!responses.custom_responses[q.id]?.trim();
+      }
+    }
     return true;
   };
 
-  const steps = [
+  const baseSteps = [
     {
       title: "¡Hola!",
       content: (
@@ -291,6 +338,43 @@ function SurveyView({ profile, onComplete, onLogout }: { profile: UserProfile, o
     }
   ];
 
+  const dynamicSteps = customQuestions.map(q => ({
+    title: q.text,
+    content: (
+      <div className="space-y-3">
+        {q.type === 'select' ? (
+          <div className="space-y-3">
+            {q.options?.map(opt => (
+              <button 
+                key={opt}
+                onClick={() => setResponses(r => ({ 
+                  ...r, 
+                  custom_responses: { ...r.custom_responses, [q.id]: opt } 
+                }))}
+                className={`w-full p-4 rounded-xl text-left text-sm font-bold border-2 transition-all flex items-center justify-between ${responses.custom_responses[q.id] === opt ? 'border-brand-red bg-brand-red/5 text-brand-red' : 'border-slate-100 text-slate-500 hover:border-slate-200'}`}
+              >
+                {opt}
+                {responses.custom_responses[q.id] === opt && <CheckCircle size={18} />}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <textarea 
+            placeholder="Escribe tu respuesta aquí..."
+            value={responses.custom_responses[q.id] || ''}
+            onChange={(e) => setResponses(r => ({ 
+              ...r, 
+              custom_responses: { ...r.custom_responses, [q.id]: e.target.value } 
+            }))}
+            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-brand-red transition-all h-32 resize-none"
+          />
+        )}
+      </div>
+    )
+  }));
+
+  const steps = [...baseSteps, ...dynamicSteps];
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-brand-gray p-4">
       <motion.div 
@@ -399,6 +483,8 @@ function AppContent() {
   const [replyText, setReplyText] = useState('');
   const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({});
   const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
+  const [surveyConfig, setSurveyConfig] = useState<SurveyConfig>(DEFAULT_SURVEY_CONFIG);
+  const [isAdminUsersCollapsed, setIsAdminUsersCollapsed] = useState(false);
   const [confirmModal, setConfirmModal] = useState<{
     show: boolean;
     title: string;
@@ -422,6 +508,13 @@ function AppContent() {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
+        // Fetch survey config
+        getDoc(doc(db, 'config', 'survey')).then(docSnap => {
+          if (docSnap.exists()) {
+            setSurveyConfig(docSnap.data() as SurveyConfig);
+          }
+        });
+
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         try {
           const userDoc = await getDoc(userDocRef);
@@ -559,10 +652,11 @@ function AppContent() {
     if (!profile) return;
     
     // Silent tagging logic
-    const advancedTools = ['AI Studio', 'Codex', 'Claude Code', 'Nano Banana', 'Antigravity', 'Cursor', 'Vercel', 'Lovable'];
-    const hasAdvancedTools = responses.tools.some((t: string) => advancedTools.includes(t));
+    const hasAdvancedTools = responses.tools.some((t: string) => surveyConfig.advancedTools.includes(t));
     
-    const isAdvanced = (responses.frequency === 'Diario' && responses.technical_validation === 'Sí') || hasAdvancedTools;
+    const isAdvanced = (responses.frequency === surveyConfig.advancedThresholdFrequency && 
+                        responses.technical_validation === surveyConfig.advancedThresholdTechnical) || 
+                       hasAdvancedTools;
     const suggested_level = isAdvanced ? 'Avanzado' as const : 'Principiante' as const;
 
     try {
@@ -599,10 +693,13 @@ function AppContent() {
   const handleDownloadSurveyCSV = () => {
     if (surveyResponses.length === 0) return;
 
-    const headers = ['Nombre', 'Email', 'Familiaridad', 'Herramientas', 'Frecuencia', 'Perfil Profesional', 'Objetivo Automatización', 'Validación Técnica', 'Nivel Sugerido', 'Fecha'];
+    const baseHeaders = ['Nombre', 'Email', 'Familiaridad', 'Herramientas', 'Frecuencia', 'Perfil Profesional', 'Objetivo Automatización', 'Validación Técnica', 'Nivel Sugerido', 'Fecha'];
+    const customQuestionsArr = surveyConfig.customQuestions || [];
+    const headers = [...baseHeaders, ...customQuestionsArr.map(q => q.text)];
+
     const rows = surveyResponses.map(r => {
       const user = allUsers.find(u => u.uid === r.user_id);
-      return [
+      const baseData = [
         r.user_name,
         user?.email || '',
         r.familiarity,
@@ -614,6 +711,13 @@ function AppContent() {
         r.suggested_level,
         new Date(r.timestamp).toLocaleString()
       ];
+
+      const customData = customQuestionsArr.map(q => {
+        const resp = r.custom_responses?.[q.id] || '';
+        return `"${resp.replace(/"/g, '""')}"`;
+      });
+
+      return [...baseData, ...customData];
     });
 
     const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
@@ -1145,7 +1249,7 @@ function AppContent() {
   }
 
   if (profile.role === 'alumno' && !profile.survey_completed) {
-    return <SurveyView profile={profile} onComplete={handleSurveyComplete} onLogout={handleLogout} />;
+    return <SurveyView profile={profile} config={surveyConfig} onComplete={handleSurveyComplete} onLogout={handleLogout} />;
   }
 
   return (
@@ -2098,95 +2202,127 @@ function AppContent() {
 
         {activeTab === 'admin' && (profile.role === 'profesor' || profile.role === 'administrador') && (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
-              <div className="p-4 bg-slate-50 border-b border-slate-200 min-w-full flex justify-between items-center">
+            <AdminSurveyConfig 
+              config={surveyConfig} 
+              onUpdate={(newConfig) => setSurveyConfig(newConfig)} 
+            />
+
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                 <h3 className="font-bold text-slate-700 flex items-center gap-2">
                   <UserPlus size={18} /> Gestión de Usuarios y Roles
+                  {isAdminUsersCollapsed && (
+                    <span className="ml-2 px-2 py-0.5 bg-brand-red/10 text-brand-red text-[10px] font-bold rounded-full uppercase tracking-wider">Minimizado</span>
+                  )}
                 </h3>
-                <button 
-                  onClick={handleDownloadSurveyCSV}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-brand-dark text-white rounded-lg text-xs font-bold hover:bg-brand-dark/90 transition-all"
-                >
-                  <Download size={14} /> Descargar Encuestas (CSV)
-                </button>
+                <div className="flex items-center gap-2">
+                  {!isAdminUsersCollapsed && (
+                    <button 
+                      onClick={handleDownloadSurveyCSV}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-brand-dark text-white rounded-lg text-xs font-bold hover:bg-brand-dark/90 transition-all"
+                    >
+                      <Download size={14} /> CSV
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => setIsAdminUsersCollapsed(!isAdminUsersCollapsed)}
+                    className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg transition-all"
+                    title={isAdminUsersCollapsed ? "Maximizar" : "Minimizar"}
+                  >
+                    {isAdminUsersCollapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
+                  </button>
+                </div>
               </div>
-              <table className="w-full text-left min-w-[600px]">
-                <thead className="bg-slate-50 border-bottom border-slate-200">
-                  <tr>
-                    <th className="p-4 text-xs font-bold uppercase text-slate-400">Nombre</th>
-                    <th className="p-4 text-xs font-bold uppercase text-slate-400">Email</th>
-                    <th className="p-4 text-xs font-bold uppercase text-slate-400">Nivel Sugerido</th>
-                    <th className="p-4 text-xs font-bold uppercase text-slate-400">Rol Actual</th>
-                    <th className="p-4 text-xs font-bold uppercase text-slate-400">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {allUsers.map(u => (
-                    <tr key={u.uid} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-4 text-sm font-medium text-slate-700">{u.displayName}</td>
-                      <td className="p-4 text-sm text-slate-500">{u.email}</td>
-                      <td className="p-4">
-                        {u.suggested_level ? (
-                          <div className="flex items-center gap-2">
-                            <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded ${
-                              u.suggested_level === 'Avanzado' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                            }`}>
-                              {u.suggested_level}
-                            </span>
-                            <button 
-                              onClick={() => {
-                                const resp = surveyResponses.find(r => r.user_id === u.uid);
-                                if (resp) setViewingSurveyResponse(resp);
-                              }}
-                              className="p-1 text-slate-400 hover:text-brand-red transition-colors"
-                              title="Ver Respuestas"
-                            >
-                              <Eye size={16} />
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-[10px] text-slate-300 italic">No completado</span>
-                        )}
-                      </td>
-                      <td className="p-4">
-                        <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded ${
-                          u.role === 'profesor' ? 'bg-brand-red/10 text-brand-red' : 
-                          u.role === 'administrador' ? 'bg-brand-dark text-white' : 
-                          'bg-slate-100 text-slate-700'
-                        }`}>
-                          {u.role}
-                        </span>
-                      </td>
-                      <td className="p-4 flex gap-2 items-center">
-                        <select 
-                          value={u.role}
-                          onChange={(e) => handleUpdateUserRole(u.uid, e.target.value as UserRole)}
-                          className="text-xs p-1 border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        >
-                          <option value="alumno">Alumno</option>
-                          <option value="profesor">Profesor</option>
-                          <option value="administrador">Administrador</option>
-                        </select>
-                        {u.status === 'pending' && (
-                          <button 
-                            onClick={() => handleApproveUser(u.uid)}
-                            className="bg-brand-red text-white px-3 py-1 rounded text-[10px] font-bold hover:bg-brand-red/90 transition-all active:scale-95"
-                          >
-                            Aprobar
-                          </button>
-                        )}
-                        <button 
-                          onClick={() => handleDeleteUser(u.uid)}
-                          className="p-1 text-slate-400 hover:text-brand-red transition-colors"
-                          title="Eliminar Usuario"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              
+              <AnimatePresence>
+                {!isAdminUsersCollapsed && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-x-auto"
+                  >
+                    <table className="w-full text-left min-w-[600px]">
+                      <thead className="bg-slate-50 border-bottom border-slate-200">
+                        <tr>
+                          <th className="p-4 text-xs font-bold uppercase text-slate-400">Nombre</th>
+                          <th className="p-4 text-xs font-bold uppercase text-slate-400">Email</th>
+                          <th className="p-4 text-xs font-bold uppercase text-slate-400">Nivel Sugerido</th>
+                          <th className="p-4 text-xs font-bold uppercase text-slate-400">Rol Actual</th>
+                          <th className="p-4 text-xs font-bold uppercase text-slate-400">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {allUsers.map(u => (
+                          <tr key={u.uid} className="hover:bg-slate-50 transition-colors">
+                            <td className="p-4 text-sm font-medium text-slate-700">{u.displayName}</td>
+                            <td className="p-4 text-sm text-slate-500">{u.email}</td>
+                            <td className="p-4">
+                              {u.suggested_level ? (
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded ${
+                                    u.suggested_level === 'Avanzado' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                                  }`}>
+                                    {u.suggested_level}
+                                  </span>
+                                  <button 
+                                    onClick={() => {
+                                      const resp = surveyResponses.find(r => r.user_id === u.uid);
+                                      if (resp) setViewingSurveyResponse(resp);
+                                    }}
+                                    className="p-1 text-slate-400 hover:text-brand-red transition-colors"
+                                    title="Ver Respuestas"
+                                  >
+                                    <Eye size={16} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-[10px] text-slate-300 italic">No completado</span>
+                              )}
+                            </td>
+                            <td className="p-4">
+                              <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded ${
+                                u.role === 'profesor' ? 'bg-brand-red/10 text-brand-red' : 
+                                u.role === 'administrador' ? 'bg-brand-dark text-white' : 
+                                'bg-slate-100 text-slate-700'
+                              }`}>
+                                {u.role}
+                              </span>
+                            </td>
+                            <td className="p-4 flex gap-2 items-center">
+                              <select 
+                                value={u.role}
+                                onChange={(e) => handleUpdateUserRole(u.uid, e.target.value as UserRole)}
+                                className="text-xs p-1 border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              >
+                                <option value="alumno">Alumno</option>
+                                <option value="profesor">Profesor</option>
+                                <option value="administrador">Administrador</option>
+                              </select>
+                              {u.status === 'pending' && (
+                                <button 
+                                  onClick={() => handleApproveUser(u.uid)}
+                                  className="bg-brand-red text-white px-3 py-1 rounded text-[10px] font-bold hover:bg-brand-red/90 transition-all active:scale-95"
+                                >
+                                  Aprobar
+                                </button>
+                              )}
+                              <button 
+                                onClick={() => handleDeleteUser(u.uid)}
+                                className="p-1.5 text-slate-400 hover:text-brand-red transition-colors"
+                                title="Eliminar Usuario"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         )}
@@ -2418,6 +2554,332 @@ function AppContent() {
           )}
         </AnimatePresence>
       </main>
+    </div>
+  );
+}
+
+function AdminSurveyConfig({ config, onUpdate }: { config: SurveyConfig, onUpdate: (newConfig: SurveyConfig) => void }) {
+  const [editingConfig, setEditingConfig] = useState(config);
+  const [newTool, setNewTool] = useState('');
+  const [isMinimized, setIsMinimized] = useState(true);
+
+  const handleSave = async () => {
+    try {
+      await setDoc(doc(db, 'config', 'survey'), editingConfig);
+      onUpdate(editingConfig);
+      alert('Configuración guardada exitosamente');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'config/survey');
+    }
+  };
+
+  const addTool = () => {
+    if (newTool.trim() && !editingConfig.toolsOptions.includes(newTool.trim())) {
+      setEditingConfig({
+        ...editingConfig,
+        toolsOptions: [...editingConfig.toolsOptions, newTool.trim()].sort()
+      });
+      setNewTool('');
+    }
+  };
+
+  const removeTool = (tool: string) => {
+    setEditingConfig({
+      ...editingConfig,
+      toolsOptions: editingConfig.toolsOptions.filter(t => t !== tool),
+      advancedTools: editingConfig.advancedTools.filter(t => t !== tool)
+    });
+  };
+
+  const toggleAdvanced = (tool: string) => {
+    const isAdv = editingConfig.advancedTools.includes(tool);
+    setEditingConfig({
+      ...editingConfig,
+      advancedTools: isAdv 
+        ? editingConfig.advancedTools.filter(t => t !== tool)
+        : [...editingConfig.advancedTools, tool]
+    });
+  };
+
+  const addCustomQuestion = () => {
+    const newQ: CustomQuestion = {
+      id: `custom_${Date.now()}`,
+      text: '¿Nueva pregunta?',
+      type: 'select',
+      options: ['Sí', 'No'],
+      required: true
+    };
+    setEditingConfig({
+      ...editingConfig,
+      customQuestions: [...(editingConfig.customQuestions || []), newQ]
+    });
+  };
+
+  const updateCustomQuestion = (id: string, updates: Partial<CustomQuestion>) => {
+    setEditingConfig({
+      ...editingConfig,
+      customQuestions: editingConfig.customQuestions?.map(q => q.id === id ? { ...q, ...updates } : q)
+    });
+  };
+
+  const removeCustomQuestion = (id: string) => {
+    setEditingConfig({
+      ...editingConfig,
+      customQuestions: editingConfig.customQuestions?.filter(q => q.id !== id)
+    });
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="flex justify-between items-center bg-slate-50 p-6 border-b border-slate-200">
+        <h3 className="font-bold text-slate-700 flex items-center gap-2">
+          <Edit size={18} className="text-brand-red" /> Configuración de Encuesta de Diagnóstico
+          {isMinimized && (
+            <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full uppercase tracking-wider">Minimizado</span>
+          )}
+        </h3>
+        <div className="flex items-center gap-3">
+          {!isMinimized && (
+            <button 
+              onClick={handleSave}
+              className="px-4 py-1.5 bg-brand-red text-white rounded-lg text-xs font-bold hover:bg-brand-red/90 transition-all flex items-center gap-2 shadow-lg shadow-brand-red/10"
+            >
+              <CheckCircle size={14} /> Guardar Cambios
+            </button>
+          )}
+          <button 
+            onClick={() => setIsMinimized(!isMinimized)}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all"
+            title={isMinimized ? "Maximizar" : "Minimizar"}
+          >
+            {isMinimized ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+          </button>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {!isMinimized && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Tools Section */}
+                <div className="space-y-4">
+                  <h4 className="font-black text-xs text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <Users size={14} /> Gestión de Herramientas
+                  </h4>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={newTool}
+                      onChange={(e) => setNewTool(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && addTool()}
+                      placeholder="Escribe el nombre de una herramienta..."
+                      className="flex-1 p-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-red/20 outline-none"
+                    />
+                    <button 
+                      onClick={addTool} 
+                      className="px-4 bg-brand-red text-white rounded-xl font-bold hover:bg-brand-red/90 transition-all"
+                    >
+                      Añadir
+                    </button>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 min-h-[200px] max-h-[400px] overflow-y-auto">
+                    <div className="flex flex-wrap gap-2">
+                      {editingConfig.toolsOptions.map(tool => (
+                        <div 
+                          key={tool} 
+                          className={`flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-xl text-xs font-bold transition-all border shadow-sm ${
+                            editingConfig.advancedTools.includes(tool) 
+                              ? 'bg-amber-50 border-amber-200 text-amber-700' 
+                              : 'bg-white border-slate-200 text-slate-600'
+                          }`}
+                        >
+                          <button 
+                            onClick={() => toggleAdvanced(tool)} 
+                            className="hover:scale-105 transition-transform flex items-center gap-1.5"
+                            title={editingConfig.advancedTools.includes(tool) ? "Herramienta Avanzada" : "Marcar como Avanzada"}
+                          >
+                            {tool}
+                            {editingConfig.advancedTools.includes(tool) && <ShieldCheck size={12} className="text-amber-500" />}
+                          </button>
+                          <button 
+                            onClick={() => removeTool(tool)} 
+                            className="p-1 hover:bg-red-50 hover:text-brand-red rounded-lg transition-colors"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    {editingConfig.toolsOptions.length === 0 && (
+                      <div className="flex flex-col items-center justify-center h-48 text-slate-400 italic text-sm">
+                        Sin herramientas configuradas
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-slate-500 bg-amber-50 p-3 rounded-lg border border-amber-100 italic">
+                    <strong>Instrucciones:</strong> Haz clic en el nombre de una herramienta para marcarla como <strong>"Tecnología Avanzada"</strong>. 
+                    Si un alumno marca una de estas, el sistema sugerirá nivel Avanzado automáticamente.
+                  </p>
+                </div>
+
+                {/* Lógica Section */}
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <h4 className="font-black text-xs text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <Plus size={14} /> Lógica de Decisión (Frecuencia y Técnica)
+                    </h4>
+                    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-6">
+                      <div className="space-y-3">
+                        <label className="text-sm font-bold text-slate-700 block">¿A partir de qué frecuencia se considera un perfil experto?</label>
+                        <div className="flex flex-wrap gap-2">
+                          {editingConfig.frequencyOptions.map(freq => (
+                            <button
+                              key={freq}
+                              onClick={() => setEditingConfig({...editingConfig, advancedThresholdFrequency: freq})}
+                              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
+                                editingConfig.advancedThresholdFrequency === freq
+                                ? 'bg-brand-red border-brand-red text-white shadow-md'
+                                : 'bg-white border-slate-200 text-slate-500 hover:border-brand-red/30'
+                              }`}
+                            >
+                              {freq}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <label className="text-sm font-bold text-slate-700 block">¿Qué respuesta de validación técnica dispara el nivel avanzado?</label>
+                        <div className="flex flex-wrap gap-2">
+                          {editingConfig.technicalOptions.map(opt => (
+                            <button
+                              key={opt}
+                              onClick={() => setEditingConfig({...editingConfig, advancedThresholdTechnical: opt})}
+                              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
+                                editingConfig.advancedThresholdTechnical === opt
+                                ? 'bg-brand-red border-brand-red text-white shadow-md'
+                                : 'bg-white border-slate-200 text-slate-500 hover:border-brand-red/30'
+                              }`}
+                            >
+                              {opt}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 space-y-3">
+                    <h5 className="font-bold text-blue-700 flex items-center gap-2 text-sm">
+                      <Info size={16} /> Poder de Decisión Automático
+                    </h5>
+                    <p className="text-xs text-blue-600 leading-relaxed">
+                      El alumno será sugerido como <strong>"Avanzado"</strong> si:
+                    </p>
+                    <ul className="text-xs text-blue-800 space-y-2 list-disc pl-4 font-medium italic">
+                      <li>Selecciona al menos una herramienta marcada como "Avanzada".</li>
+                      <li><strong>O BIEN</strong>, selecciona la frecuencia "{editingConfig.advancedThresholdFrequency}" Y la validación técnica "{editingConfig.advancedThresholdTechnical}".</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 pt-8 mt-4">
+                <div className="flex justify-between items-center mb-6">
+                  <h4 className="font-black text-xs text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <MessageSquare size={14} /> Preguntas Adicionales Personalizadas
+                  </h4>
+                  <button 
+                    onClick={addCustomQuestion}
+                    className="px-4 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition-all flex items-center gap-2"
+                  >
+                    <Plus size={14} /> Agregar Pregunta
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {editingConfig.customQuestions?.map((q, idx) => (
+                    <div key={q.id} className="bg-slate-50 p-6 rounded-3xl border border-slate-100 relative group">
+                      <button 
+                        onClick={() => removeCustomQuestion(q.id)}
+                        className="absolute top-4 right-4 p-2 text-slate-300 hover:text-brand-red transition-all"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div className="md:col-span-3 space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pregunta #{idx + 1}</label>
+                            <input 
+                              type="text" 
+                              value={q.text}
+                              onChange={(e) => updateCustomQuestion(q.id, { text: e.target.value })}
+                              className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-brand-red transition-all font-bold text-slate-700"
+                            />
+                          </div>
+                          
+                          {q.type === 'select' && (
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Opciones (separadas por coma)</label>
+                              <input 
+                                type="text" 
+                                value={q.options?.join(', ') || ''}
+                                onChange={(e) => updateCustomQuestion(q.id, { 
+                                  options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) 
+                                })}
+                                placeholder="Opción 1, Opción 2, Opción 3..."
+                                className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-brand-red transition-all text-sm text-slate-600"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo</label>
+                            <select 
+                              value={q.type}
+                              onChange={(e) => updateCustomQuestion(q.id, { type: e.target.value as 'text' | 'select' })}
+                              className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-brand-red transition-all text-sm font-bold text-slate-600"
+                            >
+                              <option value="select">Selección (Opciones)</option>
+                              <option value="text">Texto Libre</option>
+                            </select>
+                          </div>
+
+                          <div className="flex items-center gap-2 pt-2">
+                            <input 
+                              type="checkbox"
+                              id={`req_${q.id}`}
+                              checked={q.required}
+                              onChange={(e) => updateCustomQuestion(q.id, { required: e.target.checked })}
+                              className="w-4 h-4 text-brand-red border-slate-300 rounded focus:ring-brand-red"
+                            />
+                            <label htmlFor={`req_${q.id}`} className="text-xs font-bold text-slate-500 cursor-pointer">Obligatoria</label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {(!editingConfig.customQuestions || editingConfig.customQuestions.length === 0) && (
+                    <div className="text-center p-12 bg-slate-50 rounded-3xl border border-dashed border-slate-200 text-slate-400 italic">
+                      Sin preguntas personalizadas adicionales.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
