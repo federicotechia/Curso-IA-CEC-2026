@@ -2166,6 +2166,15 @@ function AppContent() {
                                 >
                                   Ver enlace enviado <ExternalLink size={12} className="group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
                                 </a>
+                                {submission.status !== 'Calificado' && (
+                                  <button 
+                                    onClick={() => handleDeleteSubmission(submission.id)}
+                                    className="ml-2 inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 px-3 py-2 rounded-xl transition-all"
+                                    title="Eliminar mi entrega para volver a subirla"
+                                  >
+                                    <Trash2 size={14} /> Eliminar
+                                  </button>
+                                )}
                               </div>
                             </div>
                             

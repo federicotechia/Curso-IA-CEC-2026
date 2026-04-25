@@ -195,7 +195,7 @@ service cloud.firestore {
       allow read: if isAdmin() || (isAuthenticated() && resource.data.studentUid == request.auth.uid);
       allow create: if isApproved() && isValidSubmission(request.resource.data) && request.resource.data.studentUid == request.auth.uid && request.resource.data.status == 'Recibido';
       allow update: if isAdmin() && isValidSubmission(request.resource.data);
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.studentUid == request.auth.uid && resource.data.status != 'Calificado');
     }
 
     match /survey_responses/{responseId} {
